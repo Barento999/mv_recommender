@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import Depends, APIRouter, Query
 from app.services.recommendation_service import (
     get_recommendations,
     get_similar_movies,

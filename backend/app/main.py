@@ -49,12 +49,11 @@ app.add_middleware(
 # -------------------------
 # Routes
 # -------------------------
-app.include_router(auth.router, prefix="/auth", tags=["Auth"])
-app.include_router(movies.router, prefix="/movies", tags=["Movies"])
-app.include_router(favorites.router, prefix="/favorites", tags=["Favorites"])
-app.include_router(ratings.router, prefix="/ratings", tags=["Ratings"])
-app.include_router(recommendations.router, prefix="/recommendations", tags=["Recommendations"])
-
+app.include_router(auth.router)
+app.include_router(movies.router)
+app.include_router(favorites.router)
+app.include_router(ratings.router)
+app.include_router(recommendations.router)
 
 # -------------------------
 # Basic endpoints

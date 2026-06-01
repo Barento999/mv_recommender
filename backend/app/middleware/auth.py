@@ -8,7 +8,7 @@ from typing import Optional
 
 security = HTTPBearer()
 
-async def get_current_user(credentials: HTTPAuthCredentials = Depends(security)):
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     payload = decode_token(token)
     user_id: str = payload.get("sub")
@@ -28,7 +28,7 @@ async def get_current_user(credentials: HTTPAuthCredentials = Depends(security))
     return user
 
 async def get_current_user_optional(
-    credentials: Optional[HTTPAuthCredentials] = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> Optional[dict]:
     if not credentials:
         return None

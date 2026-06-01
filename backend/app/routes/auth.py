@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import timedelta
 from app.schemas.user import UserRegister, UserLogin, TokenResponse, UserResponse
 from app.services.user_service import create_user, authenticate_user

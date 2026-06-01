@@ -1,5 +1,5 @@
 import asyncio
-from motor.motor_asyncio import AsyncClient
+from motor.motor_asyncio import AsyncIOMotorClient
 from app.config import settings
 from app.models.movie import Movie
 
@@ -61,7 +61,7 @@ sample_movies = [
 ]
 
 async def seed_movies():
-    client = AsyncClient(settings.MONGODB_URL)
+    client = AsyncIOMotorClient(settings.MONGODB_URL)
     db = client[settings.DATABASE_NAME]
 
     try:

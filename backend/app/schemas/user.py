@@ -5,7 +5,7 @@ from typing import Optional
 class UserRegister(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
-    password: str = Field(..., min_length=6, max_length=100)
+    password: str = Field(..., min_length=6)
 
     class Config:
         json_schema_extra = {
@@ -36,6 +36,7 @@ class UserResponse(BaseModel):
 
     class Config:
         populate_by_name = True
+        by_alias = True
         json_schema_extra = {
             "example": {
                 "_id": "507f1f77bcf86cd799439011",

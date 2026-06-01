@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter, HTTPException, status
 from app.schemas.rating import RatingCreate, RatingResponse
 from app.services.rating_service import (
     add_rating,

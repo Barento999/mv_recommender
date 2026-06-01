@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import Depends, APIRouter, HTTPException, status, Query
 from app.services.favorite_service import (
     add_favorite,
     remove_favorite,

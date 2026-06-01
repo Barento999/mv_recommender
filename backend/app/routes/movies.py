@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import Depends, APIRouter, HTTPException, status, Query
 from typing import Optional, List
 from app.schemas.movie import MovieCreate, MovieUpdate, MovieResponse
 from app.services.movie_service import (
