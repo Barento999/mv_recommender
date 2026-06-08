@@ -32,11 +32,7 @@ Core Usage:
 """
 
 # Core models
-from .collaborative_filtering import (
-    UserUserCollaborativeFiltering,
-    set_global_model,
-    get_global_model
-)
+from .collaborative_filtering import UserUserCollaborativeFiltering
 from .content_based import ContentBasedRecommender
 from .matrix_factorization import MatrixFactorization
 
@@ -48,17 +44,13 @@ from .ml_manager import MLManager
 
 # Advanced features
 from .recommendation_blending import RecommendationBlender
-from .performance_cache import PerformanceCache, get_global_cache, set_global_cache
+from .performance_cache import PerformanceCache
 
 __all__ = [
     # Core models
     "UserUserCollaborativeFiltering",
     "ContentBasedRecommender",
     "MatrixFactorization",
-    
-    # Model management
-    "set_global_model",
-    "get_global_model",
     
     # Data handling
     "DataLoader",
@@ -69,8 +61,6 @@ __all__ = [
     # Advanced
     "RecommendationBlender",
     "PerformanceCache",
-    "get_global_cache",
-    "set_global_cache",
 ]
 
 __version__ = "2.0.0"  # Streamlined complete system
