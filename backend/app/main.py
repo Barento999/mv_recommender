@@ -1,12 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import logging
 
 from app.database import connect_to_mongo, close_mongo_connection
 from app.config import settings
 
 # Import routers (make sure each has `router = APIRouter()`)
 from app.routes import auth, movies, favorites, ratings, recommendations
+
+# Import ML pipeline
+from app.ml.pipeline import initialize_ml_pipeline
+
+logger = logging.getLogger(__name__)
 
 
 # -------------------------
@@ -15,8 +21,18 @@ from app.routes import auth, movies, favorites, ratings, recommendations
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 Starting application...")
+    
+    # Connect to MongoDB
     await connect_to_mongo()
     print("✅ MongoDB connected")
+    
+    # Initialize ML Pipeline
+    print("\n📊 Initializing ML Pipeline...")
+    ml_success = await initialize_ml_pipeline()
+    if ml_success:
+        print("✅ ML Pipeline initialized")
+    else:
+        print("⚠️  ML Pipeline initialization incomplete")
     
     yield
     

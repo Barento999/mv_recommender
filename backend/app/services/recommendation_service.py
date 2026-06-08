@@ -1,46 +1,51 @@
 from app.database import get_database
 from app.models.movie import Movie
-from app.ml.collaborative_filtering import get_model, rebuild_model
+from app.ml.pipeline import get_recommendation, get_similar_movies as get_similar_from_pipeline, get_model
 from bson import ObjectId
 from typing import List
 from collections import Counter
+import logging
+
+logger = logging.getLogger(__name__)
 
 async def get_recommendations(user_id: str, limit: int = 10) -> List[Movie]:
     """
-    Get personalized movie recommendations using ML collaborative filtering
+    Get personalized movie recommendations using ML pipeline
     
-    Falls back to genre-based recommendations if ML model has insufficient data
+    Uses collaborative filtering model trained on application startup.
+    Falls back to genre-based recommendations if ML fails.
     """
     db = get_database()
     
     try:
-        # Try ML-based recommendations first
-        model = await get_model()
+        # Get ML-based recommendations from pipeline
+        logger.info(f"Getting ML recommendations for {user_id}")
+        ml_recommendations = await get_recommendation(user_id, limit=limit, model_type="cf")
         
-        # Get predicted movie recommendations
-        recommendations_with_scores = await model.recommend_movies(user_id, limit)
-        
-        if recommendations_with_scores:
+        if ml_recommendations:
             # Convert movie IDs to Movie objects
-            movie_ids = [ObjectId(movie_id) for movie_id, _ in recommendations_with_scores]
+            movie_ids = [ObjectId(movie_id) for movie_id, _ in ml_recommendations]
             movies_data = await db.movies.find({"_id": {"$in": movie_ids}}).to_list(None)
             
-            # Create a mapping for efficient lookup
-            movies_map = {str(m["_id"]): m for m in movies_data}
-            
-            # Return in order of predicted scores
-            recommendations = []
-            for movie_id, score in recommendations_with_scores:
-                if movie_id in movies_map:
-                    recommendations.append(Movie.from_dict(movies_map[movie_id]))
-            
-            if recommendations:
-                return recommendations
+            if movies_data:
+                # Create a mapping for efficient lookup
+                movies_map = {str(m["_id"]): m for m in movies_data}
+                
+                # Return in order of predicted scores
+                recommendations = []
+                for movie_id, score in ml_recommendations:
+                    if movie_id in movies_map:
+                        recommendations.append(Movie.from_dict(movies_map[movie_id]))
+                
+                if recommendations:
+                    logger.info(f"✓ Returned {len(recommendations)} ML recommendations")
+                    return recommendations
     
     except Exception as e:
-        print(f"ML recommendation failed, falling back to genre-based: {e}")
+        logger.warning(f"ML recommendation failed: {str(e)}")
     
     # Fallback to genre-based recommendations
+    logger.info(f"Falling back to genre-based recommendations for {user_id}")
     return await get_recommendations_fallback(user_id, limit)
 
 async def get_recommendations_fallback(user_id: str, limit: int = 10) -> List[Movie]:
@@ -78,21 +83,41 @@ async def get_recommendations_fallback(user_id: str, limit: int = 10) -> List[Mo
     }
 
     recommendations = await db.movies.find(query).sort([("rating", -1)]).limit(limit).to_list(None)
-
     return [Movie.from_dict(m) for m in recommendations]
+
+async def get_top_rated_movies(limit: int = 10) -> List[Movie]:
+    """Get top-rated movies as fallback."""
     db = get_database()
     movies_data = await db.movies.find().sort([("rating", -1)]).limit(limit).to_list(None)
     return [Movie.from_dict(m) for m in movies_data]
 
 async def get_similar_movies(movie_id: str, limit: int = 5) -> List[Movie]:
+    """
+    Get movies similar to a given movie using ML pipeline
+    
+    Uses content-based recommendations if available.
+    Falls back to genre-based similarity.
+    """
     db = get_database()
     try:
-        # Get the target movie
+        # Try ML-based similar movies first
+        similar_from_ml = await get_similar_from_pipeline(movie_id, limit=limit)
+        
+        if similar_from_ml:
+            movie_ids = [ObjectId(movie_id) for movie_id, _ in similar_from_ml]
+            movies_data = await db.movies.find({"_id": {"$in": movie_ids}}).to_list(None)
+            if movies_data:
+                return [Movie.from_dict(m) for m in movies_data]
+    
+    except Exception as e:
+        logger.warning(f"ML similar movies failed: {str(e)}")
+    
+    # Fallback: Get the target movie and find similar by genre
+    try:
         target_movie = await db.movies.find_one({"_id": ObjectId(movie_id)})
         if not target_movie:
             return []
 
-        # Find movies with similar genres
         target_genres = target_movie.get("genre", [])
         if not target_genres:
             return []
@@ -104,5 +129,7 @@ async def get_similar_movies(movie_id: str, limit: int = 5) -> List[Movie]:
 
         similar = await db.movies.find(query).sort([("rating", -1)]).limit(limit).to_list(None)
         return [Movie.from_dict(m) for m in similar]
-    except Exception:
+    
+    except Exception as e:
+        logger.error(f"Similar movies fallback failed: {str(e)}")
         return []

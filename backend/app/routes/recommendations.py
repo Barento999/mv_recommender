@@ -5,8 +5,24 @@ from app.services.recommendation_service import (
 )
 from app.middleware.auth import get_current_user
 from app.models.user import User
+from app.ml.pipeline import get_pipeline_status
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
+
+@router.get("/status")
+async def ml_pipeline_status():
+    """Get ML pipeline status."""
+    status = get_pipeline_status()
+    return {
+        "status": "ok" if status['cf_model'] else "warning",
+        "models": {
+            "collaborative_filtering": status['cf_model'],
+            "content_based": status['content_model'],
+            "cache": status['cache'],
+        },
+        "cache_stats": status['cache_stats'],
+        "message": "ML Pipeline Status"
+    }
 
 @router.get("")
 async def get_user_recommendations(
