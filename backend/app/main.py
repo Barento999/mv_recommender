@@ -12,6 +12,9 @@ from app.routes import auth, movies, favorites, ratings, recommendations
 # Import ML pipeline
 from app.ml.pipeline import initialize_ml_pipeline
 
+# Import data seeding
+from app.services.seed_service import seed_database
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,6 +28,10 @@ async def lifespan(app: FastAPI):
     # Connect to MongoDB
     await connect_to_mongo()
     print("✅ MongoDB connected")
+    
+    # Seed database from CSV if empty
+    print("\n📥 Checking database...")
+    await seed_database()
     
     # Initialize ML Pipeline
     print("\n📊 Initializing ML Pipeline...")

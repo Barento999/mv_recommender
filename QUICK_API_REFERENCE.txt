@@ -1,0 +1,419 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                         QUICK API REFERENCE                                   ║
+║              WHERE TO FIND RECOMMENDATIONS & MOVIES                           ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+🎯 BASIC URLs
+═══════════════════════════════════════════════════════════════════════════════
+
+API Base:           http://localhost:8000
+Interactive Docs:   http://localhost:8000/docs
+Alternative Docs:   http://localhost:8000/redoc
+OpenAPI Schema:     http://localhost:8000/openapi.json
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📚 ALL MOVIES
+═══════════════════════════════════════════════════════════════════════════════
+
+Endpoint:
+  GET http://localhost:8000/movies
+
+Curl:
+  curl http://localhost:8000/movies
+
+Response:
+  {
+    "movies": [
+      {
+        "_id": "m00000",
+        "title": "Iron Guardian",
+        "genre": ["Documentary", "War", "Action"],
+        "year": 2004,
+        "rating": 7.5,
+        "description": "...",
+        "poster_url": "https://..."
+      },
+      ...
+    ],
+    "count": 2000,
+    "total": 2000
+  }
+
+Returns: All 2,000 movies in database
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎬 GET SINGLE MOVIE
+═══════════════════════════════════════════════════════════════════════════════
+
+Endpoint:
+  GET http://localhost:8000/movies/{movie_id}
+
+Example:
+  GET http://localhost:8000/movies/m00000
+
+Curl:
+  curl http://localhost:8000/movies/m00000
+
+Response:
+  {
+    "_id": "m00000",
+    "title": "Iron Guardian",
+    "genre": ["Documentary", "War", "Action"],
+    "year": 2004,
+    "rating": 7.5,
+    "description": "A thrilling story...",
+    "poster_url": "https://...",
+    "trailer_url": "https://...",
+    "created_at": "2024-06-09T12:34:56"
+  }
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🔎 SEARCH MOVIES
+═══════════════════════════════════════════════════════════════════════════════
+
+Endpoint:
+  GET http://localhost:8000/movies/search?query={search_term}
+
+Example:
+  GET http://localhost:8000/movies/search?query=Iron
+
+Curl:
+  curl "http://localhost:8000/movies/search?query=Iron"
+
+Returns: All movies matching "Iron" in title
+
+═══════════════════════════════════════════════════════════════════════════════
+
+👤 RECOMMENDATIONS FOR USER (Requires Auth)
+═══════════════════════════════════════════════════════════════════════════════
+
+Step 1: Register / Login
+  POST http://localhost:8000/auth/register
+  {
+    "username": "testuser",
+    "email": "test@example.com",
+    "password": "password123"
+  }
+
+  Response includes:
+  {
+    "access_token": "eyJhbGciOiJIUzI1NiIs...",
+    "user_id": "507f1f77bcf86cd799439011"
+  }
+
+Step 2: Get Recommendations
+  GET http://localhost:8000/recommendations
+  Header: Authorization: Bearer {token}
+
+Optional params:
+  ?limit=10    (default: 10, max: 100)
+
+Curl:
+  curl http://localhost:8000/recommendations \
+    -H "Authorization: Bearer YOUR_TOKEN"
+
+Response:
+  {
+    "recommendations": [
+      {
+        "_id": "m00123",
+        "title": "The First Echo",
+        "genre": ["Drama", "Mystery"],
+        "year": 2020,
+        "rating": 8.2,
+        ...
+      },
+      ...
+    ],
+    "count": 10,
+    "message": "Recommendations based on your favorites"
+  }
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 SIMILAR MOVIES
+═══════════════════════════════════════════════════════════════════════════════
+
+Endpoint:
+  GET http://localhost:8000/recommendations/similar/{movie_id}
+
+Example:
+  GET http://localhost:8000/recommendations/similar/m00000
+
+Curl:
+  curl http://localhost:8000/recommendations/similar/m00000
+
+Optional params:
+  ?limit=5     (default: 5, max: 100)
+
+Response:
+  {
+    "similar": [
+      {
+        "_id": "m00234",
+        "title": "War Chronicles",
+        "genre": ["Documentary", "War"],
+        ...
+      },
+      ...
+    ],
+    "count": 5
+  }
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📊 ML SYSTEM STATUS
+═══════════════════════════════════════════════════════════════════════════════
+
+Endpoint:
+  GET http://localhost:8000/recommendations/status
+
+Curl:
+  curl http://localhost:8000/recommendations/status
+
+Response:
+  {
+    "status": "ok",
+    "models": {
+      "collaborative_filtering": true,
+      "content_based": true,
+      "cache": true
+    },
+    "cache_stats": {
+      "total_requests": 150,
+      "cache_hits": 120,
+      "hit_rate": 0.8,
+      "total_entries": 45
+    }
+  }
+
+═══════════════════════════════════════════════════════════════════════════════
+
+❤️ FAVORITES
+═══════════════════════════════════════════════════════════════════════════════
+
+Add to Favorites:
+  POST http://localhost:8000/favorites/{movie_id}
+  Header: Authorization: Bearer {token}
+
+  curl -X POST http://localhost:8000/favorites/m00000 \
+    -H "Authorization: Bearer TOKEN"
+
+Get Favorites:
+  GET http://localhost:8000/favorites
+  Header: Authorization: Bearer {token}
+
+  curl http://localhost:8000/favorites \
+    -H "Authorization: Bearer TOKEN"
+
+Remove from Favorites:
+  DELETE http://localhost:8000/favorites/{movie_id}
+  Header: Authorization: Bearer {token}
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⭐ RATINGS
+═══════════════════════════════════════════════════════════════════════════════
+
+Add Rating:
+  POST http://localhost:8000/ratings
+  {
+    "movie_id": "m00000",
+    "rating": 8.5
+  }
+  Header: Authorization: Bearer {token}
+
+Get User Ratings:
+  GET http://localhost:8000/ratings
+  Header: Authorization: Bearer {token}
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🏥 HEALTH CHECKS
+═══════════════════════════════════════════════════════════════════════════════
+
+Server Health:
+  GET http://localhost:8000/health
+
+  Response:
+  {
+    "status": "ok",
+    "database": "connected"
+  }
+
+Root:
+  GET http://localhost:8000/
+
+  Response:
+  {
+    "message": "Movie Recommendation System API",
+    "version": "1.0.0",
+    "docs": "/docs"
+  }
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 COMPLETE ENDPOINT LIST
+═══════════════════════════════════════════════════════════════════════════════
+
+Movies:
+  GET  /movies                      Get all movies
+  GET  /movies/{id}                 Get single movie
+  GET  /movies/search               Search movies
+
+Recommendations:
+  GET  /recommendations             Get user recommendations (auth required)
+  GET  /recommendations/similar/{id} Get similar movies
+  GET  /recommendations/status      Check ML system status
+
+User Management:
+  POST /auth/register               Register new user
+  POST /auth/login                  Login user
+  GET  /auth/me                     Get current user info
+
+Favorites:
+  GET  /favorites                   Get user favorites (auth required)
+  POST /favorites/{id}              Add to favorites (auth required)
+  DELETE /favorites/{id}            Remove from favorites (auth required)
+
+Ratings:
+  GET  /ratings                     Get user ratings (auth required)
+  POST /ratings                     Add rating (auth required)
+
+Health:
+  GET  /health                      Check API health
+  GET  /                            Root endpoint
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🔑 PARAMETERS
+═══════════════════════════════════════════════════════════════════════════════
+
+Query Parameters:
+  limit={number}    Limit number of results (default: 10, max: 100)
+  query={string}    Search query for movies
+  page={number}     Pagination (if supported)
+
+Headers:
+  Authorization: Bearer {token}     For authenticated endpoints
+  Content-Type: application/json    For POST/PUT requests
+
+Path Parameters:
+  {movie_id}        Movie ID (format: m00000)
+  {user_id}         User ID (format: u00000)
+  {id}              Generic ID (movie_id or user_id)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📊 DATA STATISTICS
+═══════════════════════════════════════════════════════════════════════════════
+
+Total Movies:      2,000
+Total Users:       150
+Total Ratings:     14,725
+Total Data Size:   626 KB
+
+CSV Files:
+  movies.csv       348 KB (2,000 rows)
+  users.csv        5 KB (150 rows)
+  ratings.csv      273 KB (14,725 rows)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🧪 INTERACTIVE TESTING
+═══════════════════════════════════════════════════════════════════════════════
+
+Best Way to Test:
+
+1. Open:     http://localhost:8000/docs
+2. Click on: Any endpoint (blue bar)
+3. Click:    "Try it out"
+4. Fill:     Any parameters
+5. Click:    "Execute"
+6. View:     Response
+
+This is the easiest way to explore the API!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+💻 COMMAND LINE EXAMPLES
+═══════════════════════════════════════════════════════════════════════════════
+
+Get all movies (with pretty output):
+  curl http://localhost:8000/movies | jq '.movies | length'
+
+Search for movies:
+  curl "http://localhost:8000/movies/search?query=Action" | jq '.movies'
+
+Register user:
+  TOKEN=$(curl -X POST http://localhost:8000/auth/register \
+    -H "Content-Type: application/json" \
+    -d '{"username":"user1","email":"user@example.com","password":"pass"}' \
+    | jq -r '.access_token')
+
+Get recommendations:
+  curl http://localhost:8000/recommendations \
+    -H "Authorization: Bearer $TOKEN" | jq '.recommendations'
+
+Check status:
+  curl http://localhost:8000/recommendations/status | jq
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ QUICK START
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Start app:
+   cd ~/Desktop/reco/backend
+   source venv/bin/activate
+   python -m uvicorn app.main:app --reload
+
+2. Open docs:
+   http://localhost:8000/docs
+
+3. Try endpoints:
+   - GET /movies (get all movies)
+   - GET /health (check status)
+   - GET /recommendations/status (check ML)
+
+4. Register user:
+   Use POST /auth/register in docs
+
+5. Get recommendations:
+   Use GET /recommendations in docs
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📞 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+"Cannot connect to localhost:8000?"
+  → Make sure app is running
+  → Check: python -m uvicorn app.main:app --reload
+
+"401 Unauthorized?"
+  → Auth token required
+  → Register first, then use token
+
+"No movies returned?"
+  → Check database connection
+  → Check: GET /health
+
+"Recommendations not working?"
+  → Register user first
+  → Add some favorites
+  → Check: GET /recommendations/status
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 THAT'S IT!
+═══════════════════════════════════════════════════════════════════════════════
+
+All endpoints available at:   http://localhost:8000
+Interactive docs at:          http://localhost:8000/docs
+Try it now! 🎬
+
+═══════════════════════════════════════════════════════════════════════════════
