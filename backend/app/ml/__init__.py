@@ -22,7 +22,6 @@ Structure:
 ├── recommendation_blending.py → Multi-model ensemble
 ├── cold_start_handler.py      → New user/item solutions
 ├── performance_cache.py       → Inference caching & TTL
-├── mongo_importer.py          → MongoDB integration
 └── ab_testing.py              → A/B testing framework
 
 Core Algorithms:
