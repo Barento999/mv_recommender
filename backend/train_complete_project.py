@@ -1,17 +1,27 @@
 """
 Complete ML Project Training Script
 
-Executes the full ML pipeline:
-1. Data preparation
-2. Model training (CF, Content-Based, Matrix Factorization)
-3. Model evaluation
-4. Model comparison & ranking
-5. Hyperparameter tuning
-6. Model persistence
-7. Project report generation
+THIS SCRIPT IS FOR REFERENCE ONLY.
+The actual ML pipeline is now AUTO-INITIALIZED on app startup!
+
+See: backend/app/ml/pipeline.py for production ML initialization.
+
+The ML pipeline automatically executes on application startup:
+1. Data is loaded from CSV
+2. Models are trained (CF, Content-Based)
+3. Performance caching is initialized
+4. All models are ready for inference
 
 Usage:
+    # Option 1: Use automatic pipeline (RECOMMENDED)
+    cd backend
+    ./venv/bin/python -m uvicorn app.main:app --reload
+    # ML pipeline initializes automatically on startup
+
+    # Option 2: Run this training script (optional)
     python train_complete_project.py
+
+The automatic initialization is integrated into app/main.py lifespan hooks.
 """
 
 import asyncio
