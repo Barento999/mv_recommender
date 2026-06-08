@@ -1,10 +1,52 @@
 from app.database import get_database
 from app.models.movie import Movie
+from app.ml.collaborative_filtering import get_model, rebuild_model
 from bson import ObjectId
 from typing import List
 from collections import Counter
 
 async def get_recommendations(user_id: str, limit: int = 10) -> List[Movie]:
+    """
+    Get personalized movie recommendations using ML collaborative filtering
+    
+    Falls back to genre-based recommendations if ML model has insufficient data
+    """
+    db = get_database()
+    
+    try:
+        # Try ML-based recommendations first
+        model = await get_model()
+        
+        # Get predicted movie recommendations
+        recommendations_with_scores = await model.recommend_movies(user_id, limit)
+        
+        if recommendations_with_scores:
+            # Convert movie IDs to Movie objects
+            movie_ids = [ObjectId(movie_id) for movie_id, _ in recommendations_with_scores]
+            movies_data = await db.movies.find({"_id": {"$in": movie_ids}}).to_list(None)
+            
+            # Create a mapping for efficient lookup
+            movies_map = {str(m["_id"]): m for m in movies_data}
+            
+            # Return in order of predicted scores
+            recommendations = []
+            for movie_id, score in recommendations_with_scores:
+                if movie_id in movies_map:
+                    recommendations.append(Movie.from_dict(movies_map[movie_id]))
+            
+            if recommendations:
+                return recommendations
+    
+    except Exception as e:
+        print(f"ML recommendation failed, falling back to genre-based: {e}")
+    
+    # Fallback to genre-based recommendations
+    return await get_recommendations_fallback(user_id, limit)
+
+async def get_recommendations_fallback(user_id: str, limit: int = 10) -> List[Movie]:
+    """
+    Fallback recommendation using genre-based collaborative filtering
+    """
     db = get_database()
 
     # Get user's favorite movies
@@ -38,8 +80,6 @@ async def get_recommendations(user_id: str, limit: int = 10) -> List[Movie]:
     recommendations = await db.movies.find(query).sort([("rating", -1)]).limit(limit).to_list(None)
 
     return [Movie.from_dict(m) for m in recommendations]
-
-async def get_top_rated_movies(limit: int = 10) -> List[Movie]:
     db = get_database()
     movies_data = await db.movies.find().sort([("rating", -1)]).limit(limit).to_list(None)
     return [Movie.from_dict(m) for m in movies_data]

@@ -1,5 +1,6 @@
 from app.database import get_database
 from app.models.rating import Rating
+from app.ml.collaborative_filtering import rebuild_model
 from bson import ObjectId
 from typing import List, Optional
 
@@ -18,6 +19,13 @@ async def add_rating(user_id: str, movie_id: str, rating: float) -> Rating:
     )
     result = await db.ratings.insert_one(rating_obj.to_dict())
     rating_obj._id = result.inserted_id
+    
+    # Rebuild ML model with new rating data
+    try:
+        await rebuild_model()
+    except Exception as e:
+        print(f"Warning: Could not rebuild recommendation model: {e}")
+    
     return rating_obj
 
 async def update_rating(user_id: str, movie_id: str, rating: float) -> Rating:
@@ -28,6 +36,12 @@ async def update_rating(user_id: str, movie_id: str, rating: float) -> Rating:
         return_document=True,
     )
     if result:
+        # Rebuild ML model after rating update
+        try:
+            await rebuild_model()
+        except Exception as e:
+            print(f"Warning: Could not rebuild recommendation model: {e}")
+        
         return Rating.from_dict(result)
     raise ValueError("Rating not found")
 
