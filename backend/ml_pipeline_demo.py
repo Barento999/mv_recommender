@@ -36,25 +36,25 @@ async def main():
     
     try:
         # Import ML modules
-        from app.ml.csv_generator import CSVDataGenerator
         from app.ml.data_loader import DataLoader
         from app.ml.collaborative_filtering import (
             UserUserCollaborativeFiltering, set_global_model
         )
         from app.ml.model_evaluator import ModelEvaluator
+        from pathlib import Path
         
         # =====================================================================
-        # STEP 1: Generate CSV Data
+        # STEP 1: Load CSV Data (pre-generated in backend/data/)
         # =====================================================================
-        logger.info("\n[STEP 1] Generating CSV Data")
+        logger.info("\n[STEP 1] Loading CSV Data")
         logger.info("-" * 70)
         
-        generator = CSVDataGenerator("data")
-        movies_path = generator.generate_movies_csv(2000)
-        users_path = generator.generate_users_csv(150)
-        ratings_path = generator.generate_ratings_csv(150, 2000)
+        data_dir = Path("data")
+        movies_path = data_dir / "movies.csv"
+        users_path = data_dir / "users.csv"
+        ratings_path = data_dir / "ratings.csv"
         
-        logger.info(f"Generated files:")
+        logger.info(f"Loading files:")
         logger.info(f"  Movies: {movies_path}")
         logger.info(f"  Users: {users_path}")
         logger.info(f"  Ratings: {ratings_path}")

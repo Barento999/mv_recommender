@@ -48,31 +48,22 @@ def main():
     
     try:
         # Import ML modules
-        from app.ml.csv_generator import generate_csvs
         from app.ml.data_loader import DataLoader
-        from app.ml.collaborative_filtering import create_model_from_csv, set_global_model
+        from app.ml.collaborative_filtering import UserUserCollaborativeFiltering, set_global_model
+        from pathlib import Path
         
-        # Step 1: Generate or locate data
-        logger.info("\n[STEP 1] Preparing data...")
+        # Step 1: Load data from CSV files
+        logger.info("\n[STEP 1] Loading data from CSV files...")
         
-        if args.generate or not Path(args.ratings).exists():
-            # Generate CSV data
-            try:
-                n_movies = int(args.movies)
-                n_users = int(args.users)
-                logger.info(f"Generating {n_movies} movies and {n_users} users...")
-            except ValueError:
-                # They provided file paths
-                n_movies = 2000
-                n_users = 150
-            
-            csv_info = generate_csvs(n_movies, n_users, args.data_dir)
-            movies_path = csv_info['movies']
-            users_path = csv_info['users']
-            ratings_path = csv_info['ratings']
-        else:
-            # Use provided paths
-            movies_path = args.movies
+        # Use pre-generated CSV files in backend/data/
+        movies_path = "data/movies.csv"
+        users_path = "data/users.csv"
+        ratings_path = "data/ratings.csv"
+        
+        if not Path(movies_path).exists() or not Path(ratings_path).exists():
+            logger.error(f"CSV files not found in data/ directory")
+            logger.error(f"Expected: {movies_path}, {users_path}, {ratings_path}")
+            return 1
             users_path = args.users
             ratings_path = args.ratings
             logger.info(f"Using provided CSV files:")

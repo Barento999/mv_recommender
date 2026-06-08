@@ -15,7 +15,6 @@ Structure:
 ├── matrix_factorization.py    → SVD-based recommendations
 ├── feature_engineering.py     → Feature extraction & normalization
 ├── data_loader.py             → CSV loading & validation
-├── csv_generator.py           → Synthetic data generation
 ├── model_evaluator.py         → Comprehensive evaluation metrics
 ├── model_comparison.py        → Algorithm comparison framework
 ├── hyperparameter_tuning.py   → Grid search & optimization
@@ -65,7 +64,6 @@ from .matrix_factorization import MatrixFactorization
 
 # Data handling
 from .data_loader import DataLoader
-from .csv_generator import CSVDataGenerator
 from .feature_engineering import FeatureEngineer
 
 # Evaluation & comparison
@@ -91,7 +89,6 @@ __all__ = [
     
     # Data handling
     "DataLoader",
-    "CSVDataGenerator",
     "FeatureEngineer",
     
     # Evaluation
