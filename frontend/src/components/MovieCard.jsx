@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Heart, Info } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useAuth from "../hooks/useAuth";
 import favoriteService from "../services/favoriteService";
 
@@ -9,22 +9,51 @@ function MovieCard({ movie, onFavoriteChange }) {
   const [isLoading, setIsLoading] = useState(false);
   const { isAuthenticated, token } = useAuth();
 
+  // Check if movie is already favorited
+  useEffect(() => {
+    const checkFavorite = async () => {
+      if (!isAuthenticated || !token) return;
+      
+      try {
+        const result = await favoriteService.checkFavorite(movie._id, token);
+        if (result && result.is_favorite) {
+          setIsFavorite(true);
+          console.log("✅ Movie is favorited:", movie.title);
+        } else {
+          setIsFavorite(false);
+        }
+      } catch (error) {
+        console.warn("Could not check favorite status:", error);
+      }
+    };
+
+    checkFavorite();
+  }, [movie._id, isAuthenticated, token, onFavoriteChange]);
+
   const handleFavoriteToggle = async (e) => {
     e.preventDefault();
-    if (!isAuthenticated) return;
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      alert("Please login to add favorites");
+      return;
+    }
 
     setIsLoading(true);
     try {
       if (isFavorite) {
         await favoriteService.removeFavorite(movie._id, token);
         setIsFavorite(false);
+        console.log("✅ Removed from favorites:", movie.title);
       } else {
         await favoriteService.addFavorite(movie._id, token);
         setIsFavorite(true);
+        console.log("✅ Added to favorites:", movie.title);
       }
       onFavoriteChange?.();
     } catch (error) {
-      console.error("Error toggling favorite:", error);
+      console.error("❌ Error toggling favorite:", error);
+      alert("Failed to update favorite: " + (error.response?.data?.detail || error.message));
     } finally {
       setIsLoading(false);
     }
@@ -61,22 +90,36 @@ function MovieCard({ movie, onFavoriteChange }) {
           {movie.description}
         </p>
 
-        <div className="flex gap-2">
-          <button
-            onClick={handleFavoriteToggle}
-            disabled={isLoading}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded transition ${
-              isFavorite ? "bg-primary" : "bg-darkGray hover:bg-primary"
-            }`}
+        {isAuthenticated ? (
+          <div className="flex gap-2">
+            <button
+              onClick={handleFavoriteToggle}
+              disabled={isLoading}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded transition ${
+                isFavorite 
+                  ? "bg-primary text-white" 
+                  : "bg-darkGray hover:bg-primary"
+              }`}
+            >
+              <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
+              {isLoading ? "Loading..." : isFavorite ? "Favorited" : "Favorite"}
+            </button>
+            <Link
+              to={`/movies/${movie._id}`}
+              className="flex-1 flex items-center justify-center gap-2 py-2 rounded bg-darkGray hover:bg-primary transition"
+            >
+              <Info size={18} />
+              Details
+            </Link>
+          </div>
+        ) : (
+          <Link
+            to="/login"
+            className="w-full flex items-center justify-center gap-2 py-2 rounded bg-primary hover:bg-red-600 transition"
           >
-            <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
-            {isFavorite ? "Favorited" : "Favorite"}
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded bg-darkGray hover:bg-primary transition">
-            <Info size={18} />
-            Details
-          </button>
-        </div>
+            Login to Add Favorites
+          </Link>
+        )}
       </div>
 
       {/* Static Info */}
