@@ -18,6 +18,7 @@ import UserDashboardPage from "./pages/UserDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
 import UserPreferencesPage from "./pages/UserPreferencesPage";
+import AdvancedFilterPage from "./pages/AdvancedFilterPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -33,6 +34,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/movies" element={<MoviesPage />} />
             <Route path="/movies/:id" element={<MovieDetailsPage />} />
+            <Route path="/search" element={<AdvancedFilterPage />} />
 
             {/* Protected Routes */}
             <Route

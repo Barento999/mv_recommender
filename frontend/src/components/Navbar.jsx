@@ -31,6 +31,9 @@ function Navbar() {
             <Link to="/movies" className="hover:text-primary transition">
               Movies
             </Link>
+            <Link to="/search" className="hover:text-primary transition">
+              Search
+            </Link>
             {isAuthenticated && (
               <>
                 <Link
@@ -115,6 +118,13 @@ function Navbar() {
               onClick={() => setIsOpen(false)}
             >
               Movies
+            </Link>
+            <Link
+              to="/search"
+              className="block hover:text-primary transition"
+              onClick={() => setIsOpen(false)}
+            >
+              Search
             </Link>
             {isAuthenticated && (
               <>
