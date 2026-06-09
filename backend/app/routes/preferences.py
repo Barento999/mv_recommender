@@ -142,11 +142,30 @@ async def get_preference_analysis(
                 "total_ratings": 0
             }
         
-        # Get movie details for rated movies
-        movie_ids = [
-            ObjectId(r["movie_id"]) if isinstance(r["movie_id"], str) and len(r["movie_id"]) == 24 else r["movie_id"]
-            for r in user_ratings
-        ]
+        # Get movie details for rated movies - handle both ObjectId and string formats
+        movie_ids = []
+        for r in user_ratings:
+            movie_id = r.get("movie_id")
+            if isinstance(movie_id, str):
+                try:
+                    if len(movie_id) == 24:  # Valid hex string
+                        movie_ids.append(ObjectId(movie_id))
+                    else:
+                        movie_ids.append(movie_id)
+                except Exception:
+                    movie_ids.append(movie_id)
+            else:
+                movie_ids.append(movie_id)
+        
+        if not movie_ids:
+            return {
+                "genre_preferences": {},
+                "year_preferences": {},
+                "rating_distribution": {},
+                "top_genres": [],
+                "average_rating": 0,
+                "total_ratings": 0
+            }
         
         movies = await db.movies.find({"_id": {"$in": movie_ids}}).to_list(None)
         movies_map = {str(m["_id"]): m for m in movies}
@@ -159,32 +178,36 @@ async def get_preference_analysis(
         total_rating = 0
         
         for rating in user_ratings:
-            user_rating = rating.get("rating", 0)
-            movie_id = str(rating.get("movie_id", ""))
-            
-            total_rating += user_rating
-            
-            # Rating distribution
-            rating_key = int(user_rating)
-            rating_distribution[rating_key] = rating_distribution.get(rating_key, 0) + 1
-            
-            # Get movie details
-            if movie_id in movies_map:
-                movie = movies_map[movie_id]
+            try:
+                user_rating = float(rating.get("rating", 0))
+                movie_id = str(rating.get("movie_id", ""))
                 
-                # Genre preferences
-                for genre in movie.get("genre", []):
-                    if genre not in genre_preferences:
-                        genre_preferences[genre] = {"count": 0, "avg_rating": 0, "total": 0}
-                    genre_preferences[genre]["count"] += 1
-                    genre_preferences[genre]["total"] += user_rating
-                    genre_preferences[genre]["avg_rating"] = genre_preferences[genre]["total"] / genre_preferences[genre]["count"]
+                total_rating += user_rating
                 
-                # Year preferences
-                year = movie.get("year", 0)
-                if year:
-                    year_range = f"{int(year/10)*10}s"
-                    year_preferences[year_range] = year_preferences.get(year_range, 0) + 1
+                # Rating distribution
+                rating_key = int(user_rating)
+                rating_distribution[rating_key] = rating_distribution.get(rating_key, 0) + 1
+                
+                # Get movie details
+                if movie_id in movies_map:
+                    movie = movies_map[movie_id]
+                    
+                    # Genre preferences
+                    for genre in movie.get("genre", []):
+                        if genre not in genre_preferences:
+                            genre_preferences[genre] = {"count": 0, "avg_rating": 0, "total": 0}
+                        genre_preferences[genre]["count"] += 1
+                        genre_preferences[genre]["total"] += user_rating
+                        genre_preferences[genre]["avg_rating"] = genre_preferences[genre]["total"] / genre_preferences[genre]["count"]
+                    
+                    # Year preferences
+                    year = movie.get("year", 0)
+                    if year:
+                        year_range = f"{int(year/10)*10}s"
+                        year_preferences[year_range] = year_preferences.get(year_range, 0) + 1
+            except Exception as e:
+                logger.warning(f"Error processing rating: {str(e)}")
+                continue
         
         # Get top genres
         top_genres = sorted(
@@ -215,4 +238,4 @@ async def get_preference_analysis(
         
     except Exception as e:
         logger.error(f"Error analyzing preferences: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to analyze preferences")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze preferences: {str(e)}")
