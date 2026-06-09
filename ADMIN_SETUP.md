@@ -10,20 +10,36 @@ When the backend starts for the first time, it automatically creates a default a
 - Email: `admin@movierego.com`
 - Password: Not set initially (use Option 2 or 3 to set)
 
-### Option 2: Using Setup Script
+### Option 2: Using Setup Script (After Starting Backend)
 
-Run the interactive admin setup script:
+**Make sure MongoDB is running first!** Then run:
 
 ```bash
 cd backend
-python setup_admin.py
+./venv/bin/python3 setup_admin.py
 ```
 
 This will:
 1. Prompt for admin email (or use default)
-2. Prompt for password
+2. Prompt for password (6+ characters)
 3. Create/update admin user in database
 4. Display confirmation
+
+**Example:**
+```
+🔐 ADMIN USER SETUP
+====================
+
+Admin email (default: admin@movierego.com): admin@movierego.com
+Admin password (6+ characters): ••••••••
+Confirm password: ••••••••
+
+✅ Admin user 'admin@movierego.com' created
+
+📌 LOGIN CREDENTIALS:
+   Email: admin@movierego.com
+   Password: (the one you just entered)
+```
 
 ### Option 3: Registration via Web UI
 
@@ -65,6 +81,32 @@ db.users.updateOne(
   }
 )
 ```
+
+## Full Setup Flow
+
+**Terminal 1 - Start Backend:**
+```bash
+cd backend
+./venv/bin/python -m uvicorn app.main:app --reload
+```
+
+**Terminal 2 - Set Admin Password:**
+```bash
+cd backend
+./venv/bin/python3 setup_admin.py
+# Follow prompts to set admin email and password
+```
+
+**Terminal 3 - Start Frontend:**
+```bash
+cd frontend
+npm run dev
+```
+
+**Browser:**
+1. Go to http://localhost:5173
+2. Login with admin credentials you just set
+3. You should see "ADMIN" badge in navbar and have access to admin features
 
 ## Admin Capabilities
 
@@ -109,7 +151,7 @@ The system has 3 roles with increasing permissions:
 3. **Admin** (17 permissions)
    - All permissions + manage users, manage roles, manage movies, manage content
 
-## Testing
+## Testing RBAC
 
 ### To Test RBAC:
 
@@ -120,7 +162,7 @@ The system has 3 roles with increasing permissions:
 
 2. Log in as each role and verify:
    - User: Cannot see "More" dropdown admin links
-   - Moderator: Can see Analytics and Moderation links
+   - Moderator: Can see Analytics and Moderation links  
    - Admin: Can see all admin links including User Management
 
 3. Verify API protection:
@@ -129,15 +171,20 @@ The system has 3 roles with increasing permissions:
 
 ## Troubleshooting
 
+### "Connection refused" when running setup_admin.py
+- Make sure MongoDB is running
+- Make sure backend is started (or at least MongoDB is accessible)
+- Check MongoDB is on localhost:27017
+
 ### Admin not appearing in Management Panel
 - Verify role is set to "admin" in database
 - Check that permissions array contains admin permissions
 - Reload the page and re-login
 
 ### Can't set password
-- Ensure MongoDB is running
+- Ensure MongoDB is running and accessible
 - Check that the user exists in database
-- Verify passlib is installed: `pip install passlib`
+- Run setup_admin.py again to update password
 
 ### Admin page redirects to home
 - Check browser console for errors
@@ -151,3 +198,10 @@ The system has 3 roles with increasing permissions:
 - Create additional admin accounts only when necessary
 - Use moderator role for content moderation (more restricted)
 - Monitor admin activity in the system logs
+
+## Password Requirements
+
+- Minimum 6 characters
+- Must match confirmation
+- Stored as SHA256 hash in database
+- Used for authentication only

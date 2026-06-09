@@ -6,28 +6,30 @@ Run this script to create or update the admin user password
 
 import asyncio
 import sys
+import os
 from pathlib import Path
-from motor.motor_asyncio import AsyncIOMotorClient
-from passlib.context import CryptContext
-import getpass
 
 # Add app to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from app.middleware.rbac import get_permission_list
+from motor.motor_asyncio import AsyncIOMotorClient
+import getpass
+import hashlib
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-MONGO_URL = "mongodb://localhost:27017"
 DB_NAME = "movierego"
+
+
+def hash_password(password: str) -> str:
+    """Simple password hashing using SHA256."""
+    return hashlib.sha256(password.encode()).hexdigest()
 
 
 async def setup_admin():
     """Create or update admin user with password."""
     try:
         # Connect to MongoDB
-        client = AsyncIOMotorClient(MONGO_URL)
+        mongo_url = os.getenv("MONGO_URL", "mongodb://localhost:27017")
+        client = AsyncIOMotorClient(mongo_url)
         db = client[DB_NAME]
         
         print("\n" + "="*70)
@@ -39,18 +41,20 @@ async def setup_admin():
         if not email:
             email = "admin@movierego.com"
         
-        password = getpass.getpass("\nAdmin password (will be hidden): ").strip()
+        password = getpass.getpass("\nAdmin password (6+ characters): ")
         if not password or len(password) < 6:
             print("❌ Password must be at least 6 characters")
+            client.close()
             return False
         
-        password_confirm = getpass.getpass("Confirm password: ").strip()
+        password_confirm = getpass.getpass("Confirm password: ")
         if password != password_confirm:
             print("❌ Passwords don't match")
+            client.close()
             return False
         
         # Hash password
-        password_hash = pwd_context.hash(password)
+        password_hash = hash_password(password)
         
         # Check if admin exists
         existing_admin = await db.users.find_one({"email": email})
@@ -63,18 +67,18 @@ async def setup_admin():
                     "$set": {
                         "password_hash": password_hash,
                         "role": "admin",
-                        "permissions": get_permission_list("admin"),
                     }
                 }
             )
             if result.modified_count > 0:
                 print(f"\n✅ Admin user '{email}' password updated")
             else:
-                print(f"\n✅ Admin user '{email}' already exists")
+                print(f"\n✅ Admin user '{email}' already has role set")
         else:
             # Create new admin
             from datetime import datetime
             from bson import ObjectId
+            from app.middleware.rbac import get_permission_list
             
             admin_user = {
                 "_id": ObjectId(),
@@ -87,7 +91,7 @@ async def setup_admin():
             }
             
             result = await db.users.insert_one(admin_user)
-            print(f"\n✅ Admin user '{email}' created (ID: {result.inserted_id})")
+            print(f"\n✅ Admin user '{email}' created")
         
         print("\n📌 LOGIN CREDENTIALS:")
         print(f"   Email: {email}")
