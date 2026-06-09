@@ -33,14 +33,12 @@ function UserPreferencesPage() {
     setLoading(true);
     setError(null);
     try {
-      const [prefsData, analysisData, genresData] = await Promise.all([
+      const [prefsData, genresData] = await Promise.all([
         preferencesService.getPreferences(token),
-        preferencesService.getPreferenceAnalysis(token),
         preferencesService.getAvailableGenres(),
       ]);
 
       setPreferences(prefsData);
-      setAnalysis(analysisData);
       setAvailableGenres(genresData.genres || []);
 
       setFormData({
@@ -53,11 +51,24 @@ function UserPreferencesPage() {
         notifications_enabled: prefsData.notifications_enabled ?? true,
         recommendations_frequency: prefsData.recommendations_frequency || "weekly",
       });
+      
+      // Load analysis separately to not block the UI
+      loadAnalysis();
     } catch (err) {
       console.error("Error loading preferences:", err);
       setError("Failed to load preferences");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAnalysis = async () => {
+    try {
+      const analysisData = await preferencesService.getPreferenceAnalysis(token);
+      setAnalysis(analysisData);
+    } catch (err) {
+      console.error("Error loading analysis:", err);
+      // Don't show error for analysis, it's optional
     }
   };
 
