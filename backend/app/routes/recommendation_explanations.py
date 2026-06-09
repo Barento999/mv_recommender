@@ -22,16 +22,22 @@ async def get_recommendations_with_explanations(
     """Get recommendations with explanations for why they're recommended."""
     try:
         user_id = str(current_user._id)
+        user_obj_id = ObjectId(user_id) if isinstance(current_user._id, str) else current_user._id
         
         # Get user's favorites for explanation context
-        user_favorites = await db.favorites.find({"user_id": ObjectId(user_id)}).to_list(None)
+        user_favorites = await db.favorites.find({"user_id": user_obj_id}).to_list(None)
         favorite_movie_ids = [fav["movie_id"] for fav in user_favorites]
         
         # Get favorite movie details for genre analysis
         favorite_movies = []
         if favorite_movie_ids:
+            # Convert movie_ids to ObjectId, handling both string and ObjectId formats
+            movie_obj_ids = [
+                ObjectId(mid) if isinstance(mid, str) and len(mid) == 24 else mid 
+                for mid in favorite_movie_ids
+            ]
             favorite_movies = await db.movies.find(
-                {"_id": {"$in": [ObjectId(mid) if isinstance(mid, str) else mid for mid in favorite_movie_ids]}}
+                {"_id": {"$in": movie_obj_ids}}
             ).to_list(None)
         
         # Extract genres from favorites
@@ -52,7 +58,10 @@ async def get_recommendations_with_explanations(
             }
         
         # Build recommendations with explanations
-        movie_ids = [ObjectId(movie_id) for movie_id, _ in ml_recommendations]
+        movie_ids = [
+            ObjectId(movie_id) if isinstance(movie_id, str) and len(movie_id) == 24 else movie_id 
+            for movie_id, _ in ml_recommendations
+        ]
         movies_data = await db.movies.find({"_id": {"$in": movie_ids}}).to_list(None)
         
         recommendations_with_explanations = []
@@ -146,21 +155,30 @@ async def get_movie_explanation(
     """Get detailed explanation for why a specific movie is recommended to the user."""
     try:
         user_id = str(current_user._id)
+        user_obj_id = ObjectId(user_id) if isinstance(current_user._id, str) else current_user._id
         
-        # Get the movie
-        movie = await db.movies.find_one({"_id": ObjectId(movie_id)})
+        # Get the movie - handle ObjectId conversion safely
+        try:
+            movie = await db.movies.find_one({"_id": ObjectId(movie_id)})
+        except Exception:
+            movie = None
         if not movie:
             return {"error": "Movie not found"}
         
         # Get user's favorites
-        user_favorites = await db.favorites.find({"user_id": ObjectId(user_id)}).to_list(None)
+        user_favorites = await db.favorites.find({"user_id": user_obj_id}).to_list(None)
         favorite_movie_ids = [fav["movie_id"] for fav in user_favorites]
         
         # Get favorite movie details
         favorite_movies = []
         if favorite_movie_ids:
+            # Convert movie_ids to ObjectId, handling both string and ObjectId formats
+            movie_obj_ids = [
+                ObjectId(mid) if isinstance(mid, str) and len(mid) == 24 else mid 
+                for mid in favorite_movie_ids
+            ]
             favorite_movies = await db.movies.find(
-                {"_id": {"$in": [ObjectId(mid) if isinstance(mid, str) else mid for mid in favorite_movie_ids]}}
+                {"_id": {"$in": movie_obj_ids}}
             ).to_list(None)
         
         # Extract genres and analysis
@@ -171,7 +189,7 @@ async def get_movie_explanation(
         
         # Get user's ratings for context
         user_ratings = await db.ratings.find(
-            {"user_id": ObjectId(user_id)},
+            {"user_id": user_obj_id},
             {"movie_id": 1, "rating": 1}
         ).to_list(None)
         
