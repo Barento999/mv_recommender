@@ -8,6 +8,10 @@ import asyncio
 import sys
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Add app to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -16,7 +20,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import getpass
 import hashlib
 
-DB_NAME = "movierego"
+# Get MongoDB URL from environment
+MONGO_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+DB_NAME = os.getenv("DATABASE_NAME", "movierego")
 
 
 def hash_password(password: str) -> str:
@@ -28,20 +34,29 @@ async def setup_admin():
     """Create or update admin user with password."""
     try:
         # Connect to MongoDB
-        mongo_url = os.getenv("MONGO_URL", "mongodb://localhost:27017")
-        client = AsyncIOMotorClient(mongo_url)
+        client = AsyncIOMotorClient(MONGO_URL)
         db = client[DB_NAME]
         
         print("\n" + "="*70)
         print("🔐 ADMIN USER SETUP")
+        print(f"📍 Connecting to: {MONGO_URL[:50]}...")
         print("="*70)
         
+        # Test connection
+        try:
+            await db.command('ping')
+            print("✅ Connected to MongoDB Atlas\n")
+        except Exception as e:
+            print(f"❌ Failed to connect to MongoDB: {str(e)}")
+            client.close()
+            return False
+        
         # Get admin credentials
-        email = input("\nAdmin email (default: admin@movierego.com): ").strip()
+        email = input("Admin email (default: admin@movierego.com): ").strip()
         if not email:
             email = "admin@movierego.com"
         
-        password = getpass.getpass("\nAdmin password (6+ characters): ")
+        password = getpass.getpass("Admin password (6+ characters): ")
         if not password or len(password) < 6:
             print("❌ Password must be at least 6 characters")
             client.close()
