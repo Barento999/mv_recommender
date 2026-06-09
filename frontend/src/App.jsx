@@ -12,6 +12,7 @@ import RegisterPage from "./pages/RegisterPage";
 import MoviesPage from "./pages/MoviesPage";
 import MovieDetailsPage from "./pages/MovieDetailsPage";
 import FavoritesPage from "./pages/FavoritesPage";
+import WishlistPage from "./pages/WishlistPage";
 import RecommendationsPage from "./pages/RecommendationsPage";
 import ProfilePage from "./pages/ProfilePage";
 import UserDashboardPage from "./pages/UserDashboardPage";
@@ -42,6 +43,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <FavoritesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wishlist"
+              element={
+                <ProtectedRoute>
+                  <WishlistPage />
                 </ProtectedRoute>
               }
             />

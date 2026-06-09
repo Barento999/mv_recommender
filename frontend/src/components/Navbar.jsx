@@ -45,6 +45,9 @@ function Navbar() {
                 <Link to="/favorites" className="hover:text-primary transition">
                   Favorites
                 </Link>
+                <Link to="/wishlist" className="hover:text-primary transition">
+                  Wishlist
+                </Link>
                 <Link
                   to="/user-dashboard"
                   className="hover:text-primary transition"
@@ -141,6 +144,13 @@ function Navbar() {
                   onClick={() => setIsOpen(false)}
                 >
                   Favorites
+                </Link>
+                <Link
+                  to="/wishlist"
+                  className="block hover:text-primary transition"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Wishlist
                 </Link>
                 <Link
                   to="/user-dashboard"
