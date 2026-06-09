@@ -8,6 +8,7 @@ import ratingService from "../services/ratingService";
 import watchHistoryService from "../services/watchHistoryService";
 import RatingStars from "../components/RatingStars";
 import MovieCard from "../components/MovieCard";
+import ReviewsSection from "../components/ReviewsSection";
 import useAuth from "../hooks/useAuth";
 
 function MovieDetailsPage() {
@@ -213,6 +214,9 @@ function MovieDetailsPage() {
                 </div>
               </div>
             )}
+
+            {/* Reviews Section */}
+            <ReviewsSection movieId={id} movieTitle={movie.title} />
           </div>
 
           {/* Sidebar */}
