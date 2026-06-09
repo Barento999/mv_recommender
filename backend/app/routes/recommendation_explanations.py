@@ -46,15 +46,52 @@ async def get_recommendations_with_explanations(
             for genre in movie.get("genre", []):
                 user_favorite_genres[genre] = user_favorite_genres.get(genre, 0) + 1
         
+        # Get stats for context
+        total_favorites = len(favorite_movie_ids)
+        
         # Get ML recommendations
         ml_recommendations = await get_recommendation(user_id, limit=limit, model_type="cf")
+        logger.info(f"ML recommendations: {len(ml_recommendations) if ml_recommendations else 0}")
         
+        # If no ML recommendations, use fallback
         if not ml_recommendations:
+            logger.info(f"Using fallback recommendations for {user_id}")
+            from app.services.recommendation_service import get_recommendations_fallback
+            fallback_movies = await get_recommendations_fallback(user_id, limit)
+            
+            if not fallback_movies:
+                return {
+                    "recommendations": [],
+                    "explanations": [],
+                    "count": 0,
+                    "message": "No recommendations available. Start rating movies to get recommendations!"
+                }
+            
+            # Return fallback recommendations without detailed explanations
             return {
-                "recommendations": [],
-                "explanations": [],
-                "count": 0,
-                "message": "No recommendations available"
+                "recommendations": [
+                    {
+                        "_id": str(m._id),
+                        "title": m.title,
+                        "genre": m.genre,
+                        "year": m.year,
+                        "rating": m.rating,
+                        "description": m.description,
+                        "poster_url": m.poster_url,
+                        "trailer_url": m.trailer_url,
+                        "created_at": m.created_at,
+                        "explanation": {
+                            "type": "Top Rated",
+                            "reasons": ["Highly rated movie that matches your interests"],
+                            "confidence": 60,
+                            "rank": idx + 1
+                        }
+                    }
+                    for idx, m in enumerate(fallback_movies)
+                ],
+                "count": len(fallback_movies),
+                "total_favorites": total_favorites,
+                "message": "Recommendations based on top-rated movies"
             }
         
         # Build recommendations with explanations
