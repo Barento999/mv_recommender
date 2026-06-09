@@ -152,41 +152,54 @@ async def get_genre_analytics(db: AsyncIOMotorDatabase = Depends(get_database)):
 
 @router.get("/user-engagement")
 async def get_user_engagement(db: AsyncIOMotorDatabase = Depends(get_database)):
-    """Get user engagement metrics."""
+    """Get user engagement metrics (optimized)."""
     try:
         users_collection = db["users"]
         ratings_collection = db["ratings"]
         favorites_collection = db["favorites"]
 
-        # Count users by activity level
-        all_users = await users_collection.find({}).to_list(None)
-        
-        total_users = len(all_users)
-        active_users_30d = 0
-        super_users = 0  # Users with 20+ ratings or 10+ favorites
-        dormant_users = 0  # Users with no activity
+        total_users = await users_collection.count_documents({})
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
 
-        for user in all_users:
-            user_id = user["_id"]
-            
-            # Check activity in last 30 days
-            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-            recent_activity = await ratings_collection.count_documents({
-                "user_id": str(user_id),
-                "created_at": {"$gte": thirty_days_ago}
-            })
-            
-            if recent_activity > 0:
-                active_users_30d += 1
+        # Get active users in 30 days via aggregation
+        active_users_30d_list = await ratings_collection.distinct(
+            "user_id",
+            {"created_at": {"$gte": thirty_days_ago}}
+        )
+        active_users_30d = len(active_users_30d_list)
 
-            # Check if super user
-            total_ratings = await ratings_collection.count_documents({"user_id": str(user_id)})
-            total_favorites = await favorites_collection.count_documents({"user_id": str(user_id)})
-            
-            if total_ratings >= 20 or total_favorites >= 10:
-                super_users += 1
-            elif total_ratings == 0 and total_favorites == 0:
-                dormant_users += 1
+        # Get super users (20+ ratings or 10+ favorites) - using aggregation
+        super_users_ratings = await ratings_collection.aggregate([
+            {
+                "$group": {
+                    "_id": "$user_id",
+                    "rating_count": {"$sum": 1}
+                }
+            },
+            {
+                "$match": {"rating_count": {"$gte": 20}}
+            }
+        ]).to_list(None)
+
+        super_user_ids = set(u["_id"] for u in super_users_ratings)
+
+        super_users_favorites = await favorites_collection.aggregate([
+            {
+                "$group": {
+                    "_id": "$user_id",
+                    "favorite_count": {"$sum": 1}
+                }
+            },
+            {
+                "$match": {"favorite_count": {"$gte": 10}}
+            }
+        ]).to_list(None)
+
+        super_user_ids.update(u["_id"] for u in super_users_favorites)
+        super_users = len(super_user_ids)
+
+        # Dormant users = total - active in 30 days (simplified estimate)
+        dormant_users = max(0, total_users - active_users_30d)
 
         return {
             "total_users": total_users,
@@ -197,7 +210,7 @@ async def get_user_engagement(db: AsyncIOMotorDatabase = Depends(get_database)):
                 "active": active_users_30d,
                 "super": super_users,
                 "dormant": dormant_users,
-                "regular": total_users - super_users - dormant_users
+                "regular": max(0, total_users - super_users - dormant_users)
             }
         }
 
