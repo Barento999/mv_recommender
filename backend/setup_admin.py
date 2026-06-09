@@ -17,17 +17,12 @@ load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent))
 
 from motor.motor_asyncio import AsyncIOMotorClient
+from app.utils.security import hash_password
 import getpass
-import hashlib
 
 # Get MongoDB URL from environment
 MONGO_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
 DB_NAME = os.getenv("DATABASE_NAME", "movierego")
-
-
-def hash_password(password: str) -> str:
-    """Simple password hashing using SHA256."""
-    return hashlib.sha256(password.encode()).hexdigest()
 
 
 async def setup_admin():
@@ -68,7 +63,7 @@ async def setup_admin():
             client.close()
             return False
         
-        # Hash password
+        # Hash password using Argon2 (same as login system)
         password_hash = hash_password(password)
         
         # Check if admin exists
@@ -80,7 +75,7 @@ async def setup_admin():
                 {"email": email},
                 {
                     "$set": {
-                        "password_hash": password_hash,
+                        "password": password_hash,  # Use "password" field name
                         "role": "admin",
                     }
                 }
@@ -99,7 +94,7 @@ async def setup_admin():
                 "_id": ObjectId(),
                 "name": "Admin User",
                 "email": email,
-                "password_hash": password_hash,
+                "password": password_hash,  # Use "password" field name
                 "role": "admin",
                 "permissions": get_permission_list("admin"),
                 "created_at": datetime.utcnow(),
