@@ -13,6 +13,7 @@ import MoviesPage from "./pages/MoviesPage";
 import MovieDetailsPage from "./pages/MovieDetailsPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import WishlistPage from "./pages/WishlistPage";
+import WatchHistoryPage from "./pages/WatchHistoryPage";
 import RecommendationsPage from "./pages/RecommendationsPage";
 import ProfilePage from "./pages/ProfilePage";
 import UserDashboardPage from "./pages/UserDashboardPage";
@@ -51,6 +52,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <WishlistPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/watch-history"
+              element={
+                <ProtectedRoute>
+                  <WatchHistoryPage />
                 </ProtectedRoute>
               }
             />

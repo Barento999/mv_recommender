@@ -5,6 +5,7 @@ import movieService from "../services/movieService";
 import recommendationService from "../services/recommendationService";
 import favoriteService from "../services/favoriteService";
 import ratingService from "../services/ratingService";
+import watchHistoryService from "../services/watchHistoryService";
 import RatingStars from "../components/RatingStars";
 import MovieCard from "../components/MovieCard";
 import useAuth from "../hooks/useAuth";
@@ -26,6 +27,13 @@ function MovieDetailsPage() {
         setMovie(movieData);
 
         if (isAuthenticated) {
+          // Record in watch history
+          try {
+            await watchHistoryService.addToHistory(id, token);
+          } catch (error) {
+            console.warn("Could not record watch history:", error);
+          }
+
           const fav = await favoriteService.checkFavorite(id, token);
           setIsFavorite(fav.is_favorite);
 

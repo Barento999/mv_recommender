@@ -48,6 +48,9 @@ function Navbar() {
                 <Link to="/wishlist" className="hover:text-primary transition">
                   Wishlist
                 </Link>
+                <Link to="/watch-history" className="hover:text-primary transition">
+                  History
+                </Link>
                 <Link
                   to="/user-dashboard"
                   className="hover:text-primary transition"
@@ -151,6 +154,13 @@ function Navbar() {
                   onClick={() => setIsOpen(false)}
                 >
                   Wishlist
+                </Link>
+                <Link
+                  to="/watch-history"
+                  className="block hover:text-primary transition"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Watch History
                 </Link>
                 <Link
                   to="/user-dashboard"
