@@ -32,6 +32,7 @@ class UserResponse(BaseModel):
     id: str = Field(alias="_id")
     name: str
     email: str
+    role: str = "user"
     created_at: datetime
 
     class Config:
@@ -42,6 +43,7 @@ class UserResponse(BaseModel):
                 "_id": "507f1f77bcf86cd799439011",
                 "name": "John Doe",
                 "email": "john@example.com",
+                "role": "user",
                 "created_at": "2024-01-01T12:00:00",
             }
         }
@@ -50,3 +52,4 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str
     user: UserResponse
+
