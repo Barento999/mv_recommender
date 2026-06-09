@@ -16,6 +16,7 @@ import RecommendationsPage from "./pages/RecommendationsPage";
 import ProfilePage from "./pages/ProfilePage";
 import UserDashboardPage from "./pages/UserDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -70,6 +71,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AdminDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <AnalyticsDashboardPage />
                 </ProtectedRoute>
               }
             />

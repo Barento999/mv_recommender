@@ -48,6 +48,12 @@ function Navbar() {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  to="/analytics"
+                  className="hover:text-primary transition"
+                >
+                  Analytics
+                </Link>
               </>
             )}
           </div>
@@ -126,6 +132,13 @@ function Navbar() {
                   onClick={() => setIsOpen(false)}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  to="/analytics"
+                  className="block hover:text-primary transition"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Analytics
                 </Link>
                 <Link
                   to="/profile"
