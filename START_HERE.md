@@ -1,224 +1,269 @@
-# 🎬 MovieReco - ML Model Build Complete! 
+# 🚀 MovieReco - Complete Startup Guide
 
-## ✅ What You Have
+## Prerequisites
+- MongoDB running on `localhost:27017`
+- Node.js installed
+- Python 3.10+ with venv
 
-A **fully-built collaborative filtering ML recommendation system** with:
-- ✓ 2,000 realistic movies
-- ✓ 150 diverse users  
-- ✓ 9,000+ ratings with realistic distribution
-- ✓ Production-ready ML model
-- ✓ Comprehensive documentation
-- ✓ Two seed scripts (async + sync)
+## 🎯 Step-by-Step Startup
+
+### Step 1: Start MongoDB
+
+**If MongoDB is installed locally:**
+```bash
+# Linux/Mac
+mongod
+
+# Or in background
+mongod &
+
+# Windows
+mongod.exe
+```
+
+**Check if running:**
+```bash
+# Should connect without errors
+mongo mongodb://localhost:27017
+```
+
+**If MongoDB is not installed:**
+- [Install MongoDB Community Server](https://docs.mongodb.com/manual/installation/)
+- Or use Docker: `docker run -d -p 27017:27017 mongo`
 
 ---
 
-## 🚀 Get Started (5 Minutes)
+### Step 2: Start Backend (Terminal 1)
 
-### 1. Start MongoDB
-```bash
-# Pick one:
-docker compose up -d              # Docker (easiest)
-mongod --dbpath ~/data/mongodb    # Or local
-```
-
-### 2. Seed Database
 ```bash
 cd backend
-source venv/bin/activate
-python seed_2000_movies_sync.py   # ~1-2 minutes
+./venv/bin/python -m uvicorn app.main:app --reload
 ```
 
-### 3. Start Backend
+**Expected output:**
+```
+INFO:     Uvicorn running on http://127.0.0.1:8000
+INFO:     Application startup complete
+```
+
+**First startup will:**
+- Auto-seed database with 2,000 movies, 150 users, 14,725 ratings
+- Create default admin user: `admin@movierego.com`
+- Initialize ML models
+
+---
+
+### Step 3: Set Admin Password (Terminal 2)
+
+**After backend starts and shows "Application startup complete":**
+
 ```bash
-# From backend (with venv activated)
-uvicorn app.main:app --reload --port 8000
+cd backend
+./venv/bin/python3 setup_admin.py
 ```
 
-Expected output:
+**Follow the prompts:**
 ```
-[CF Model] ✓ Model built successfully in 0.45s
-[CF Model]   • Users: 150 | Movies: 2000 | Ratings: 9,250
+Admin email (default: admin@movierego.com): [Press Enter]
+Admin password (6+ characters): password123
+Confirm password: password123
 ```
 
-### 4. Start Frontend
+**Success output:**
+```
+✅ Admin user 'admin@movierego.com' created
+
+📌 LOGIN CREDENTIALS:
+   Email: admin@movierego.com
+   Password: password123
+```
+
+---
+
+### Step 4: Start Frontend (Terminal 3)
+
 ```bash
 cd frontend
 npm run dev
 ```
 
-### 5. Open Browser
+**Expected output:**
 ```
-http://localhost:3000
-```
+VITE v5.x.x  ready in XXX ms
 
-Then: Register → Rate movies → Get personalized recommendations!
-
----
-
-## 📚 Documentation
-
-| File | Purpose | Time |
-|------|---------|------|
-| **QUICK_START_ML.md** | Copy-paste setup guide | 5 min |
-| **ML_ALGORITHM_VISUAL.md** | How it works with diagrams | 15 min |
-| **ML_COMPLETE_INDEX.md** | Find anything you need | 5 min |
-| **ML_MODEL_SETUP_GUIDE.md** | Deep dive guide | 20 min |
-
----
-
-## 🧠 The ML Model Explained (30 seconds)
-
-**What it does:**
-1. You rate movies (e.g., 9/10, 5/10, 7/10, ...)
-2. System finds 10 users with similar taste to you
-3. Sees what movies those users rated highly
-4. Predicts you'll like those movies too
-5. Recommends top 10 to you
-
-**Why it works:**
-- People with similar taste → likely to enjoy same movies
-- Uses math (cosine similarity) to measure "similar taste"
-- Weighted average: "more similar users" = "more weight"
-
-**Example:**
-```
-You rated: [9, 7, 8]  ← Your taste
-User_B rated: [8, 7, 9]  ← Similar taste (0.95 similarity!)
-User_C rated: [2, 3, 1]  ← Different taste (0.12 similarity)
-
-If User_B gave Movie_X a 9 → We predict you'd like it too
-If User_C gave Movie_X a 9 → We don't trust that prediction
+➜  Local:   http://localhost:5173/
 ```
 
 ---
 
-## 🎯 3 Paths Forward
+### Step 5: Login to Application
 
-### Path 1: Just Run It
+1. Open browser: http://localhost:5173
+2. Click **Login**
+3. Enter credentials:
+   - Email: `admin@movierego.com`
+   - Password: `password123` (or what you set)
+4. See "ADMIN" badge in navbar (red)
+5. Access admin features from "More" dropdown
+
+---
+
+## 🎮 What You Can Do
+
+### As Admin:
+- **User Management** (`/admin/users`) - Manage all users
+- **Analytics** (`/analytics`) - View system metrics
+- **Admin Dashboard** (`/admin-dashboard`) - System overview
+- Everything a regular user can do
+
+### As Regular User:
+- Browse 2,000 movies with posters
+- Rate movies
+- Add favorites & wishlist
+- Get recommendations
+- View watch history
+- Write reviews
+
+---
+
+## 🔧 Troubleshooting
+
+### "Connection refused" errors
+**Problem:** MongoDB not running
+**Solution:**
 ```bash
-# Follow the 5 steps above
-# Then register, rate movies, get recommendations
-# Done! ✓
+# Check if MongoDB is running
+ps aux | grep mongod
+
+# If not running, start it
+mongod &
+
+# Wait 5 seconds, then try again
 ```
 
-### Path 2: Understand How It Works
+### Backend won't start
+**Problem:** Port 8000 already in use
+**Solution:**
 ```bash
-# 1. Follow Path 1 setup
-# 2. Read ML_ALGORITHM_VISUAL.md (15 min)
-# 3. You'll understand the math and algorithm
+# Find and kill process on port 8000
+lsof -i :8000
+kill -9 <PID>
+
+# Then restart backend
 ```
 
-### Path 3: Deep Learning
+### Frontend won't start
+**Problem:** Port 5173 already in use or npm not installed
+**Solution:**
 ```bash
-# 1. Follow Path 2 (understand how it works)
-# 2. Read ML_MODEL_SETUP_GUIDE.md (20 min)
-# 3. Read collaborative_filtering.py code (30 min)
-# 4. Try modifying k_neighbors or adding more data
+# Install dependencies
+cd frontend
+npm install
+
+# Try a different port
+npm run dev -- --port 3000
+```
+
+### Admin password not working
+**Problem:** Setup script failed or MongoDB wasn't running
+**Solution:**
+```bash
+# Verify MongoDB is running
+mongo mongodb://localhost:27017
+
+# Then run setup again
+./venv/bin/python3 setup_admin.py
+```
+
+### ML models not training
+**Problem:** Models train on first startup, takes 3-7 seconds
+**Solution:**
+```bash
+# Check backend logs for "ML models initialized"
+# Wait longer on first startup
+# Refresh page if recommendations not showing
 ```
 
 ---
 
-## 🗂️ What Was Created
+## 📊 System Components
 
-### Code
-- `backend/app/ml/collaborative_filtering.py` — The ML model (rewritten, 450 lines)
-- `backend/seed_2000_movies.py` — Async seed script (new)
-- `backend/seed_2000_movies_sync.py` — Sync seed script (new)
-
-### Documentation  
-- `QUICK_START_ML.md` — Quick start guide
-- `ML_ALGORITHM_VISUAL.md` — Visual explanations
-- `ML_MODEL_SETUP_GUIDE.md` — Complete guide
-- `ML_MODEL_SUMMARY.md` — What was built
-- `ML_COMPLETE_INDEX.md` — Complete index
-- `FILES_CREATED.txt` — File listing
+| Component | Port | Status |
+|-----------|------|--------|
+| MongoDB | 27017 | Must be running |
+| Backend | 8000 | Starts in Terminal 1 |
+| Frontend | 5173 | Starts in Terminal 3 |
 
 ---
 
-## ❓ Common Questions
+## 🎓 Testing RBAC
 
-**Q: How long does setup take?**
-A: 5 minutes if MongoDB is already running. 15 minutes if you need to install MongoDB.
+**Create test users:**
 
-**Q: Do I need to understand ML to use this?**
-A: No! Just follow the 5 steps above. But if you want to, read ML_ALGORITHM_VISUAL.md.
+1. **Admin** (use the one you created)
+   - Email: admin@movierego.com
+   - See: User Management, Analytics, Admin Dashboard
 
-**Q: Can I modify the data?**
-A: Yes! Edit `seed_2000_movies_sync.py` and change:
-```python
-generate_movies(2000)    # ← Change this
-generate_users(150)      # ← Or this
+2. **Moderator** (create new)
+   - Register any email
+   - Login as admin → User Management
+   - Change role to "moderator"
+   - See: Analytics, Moderation links
+
+3. **Regular User** (create new)
+   - Register any email
+   - Login
+   - See: Normal features only
+
+---
+
+## 💡 Tips
+
+- **First startup takes longer** (ML initialization)
+- **Recommendations need ratings** - Rate movies first to get recommendations
+- **Admin features require login** - Non-admin users can't access /admin/users
+- **Database auto-seeds** - Movies/users/ratings auto-loaded on first run
+- **Hot reload enabled** - Edit backend/frontend code and see changes instantly
+
+---
+
+## 📝 Default Data
+
+Generated automatically on first startup:
+- **2,000 movies** with unique Unsplash posters
+- **150 users** with realistic names
+- **14,725 ratings** across movies
+- **3 ML models** for recommendations
+
+---
+
+## ❓ Quick Commands Reference
+
+```bash
+# Start everything
+# Terminal 1
+cd backend && ./venv/bin/python -m uvicorn app.main:app --reload
+
+# Terminal 2 (after backend starts)
+cd backend && ./venv/bin/python3 setup_admin.py
+
+# Terminal 3
+cd frontend && npm run dev
+
+# Stop everything
+# Press Ctrl+C in each terminal
 ```
-
-**Q: Can I use this in production?**
-A: Yes! The code is production-ready. For scale, add Redis caching and sparse matrices.
-
-**Q: What if recommendations are bad?**
-A: If you rated movies no one else rated, there's no similar user. Rate more popular movies first!
-
----
-
-## 🐛 Troubleshooting
-
-| Error | Solution |
-|-------|----------|
-| MongoDB won't start | See QUICK_START_ML.md |
-| Seed script fails | Make sure MongoDB is running |
-| Model not building | Check if database has 2000+ movies |
-| Can't get recommendations | Register first, rate 5+ movies, wait 30s |
-
-Full troubleshooting in `QUICK_START_ML.md`
-
----
-
-## 🎓 Learning Resources
-
-Want to learn more?
-
-1. **Algorithm:** ML_ALGORITHM_VISUAL.md (recommended first)
-2. **Math:** ML_MODEL_SETUP_GUIDE.md → "How the New ML Model Works"
-3. **Code:** Read `collaborative_filtering.py` (lots of comments)
-4. **Concepts:** Matrix factorization, k-NN, cosine similarity (Google these)
-
----
-
-## 📊 Key Numbers
-
-| Item | Count |
-|------|-------|
-| Movies | 2,000 |
-| Users | 150 |
-| Ratings | ~9,250 |
-| Avg ratings per user | 62 |
-| Avg ratings per movie | 4.6 |
-| Matrix sparsity | 99.7% (realistic!) |
-| Model build time | 0.3-0.5 seconds |
-| Recommendation latency | 50-100ms |
-
----
-
-## ✨ What's Next
-
-After you get it running:
-
-1. **Play with it** — Rate movies, get recommendations, see how it improves
-2. **Understand it** — Read the algorithm guides
-3. **Modify it** — Try different k_neighbors, add more data
-4. **Extend it** — Add matrix factorization, deep learning, or hybrid approaches
-5. **Deploy it** — Use Docker, add caching, scale to millions of users
 
 ---
 
 ## 🎉 You're Ready!
 
-You have a **real, working ML recommendation system**. 
+Your complete movie recommendation system is now running with:
+- ✅ Full RBAC (3 roles: user, moderator, admin)
+- ✅ 2,000 movies with AI-generated posters
+- ✅ ML-powered recommendations
+- ✅ User ratings, favorites, wishlist
+- ✅ Admin user management
+- ✅ System analytics
 
-### Next Step: Follow the 5-minute setup above! 
-
-Questions? See the documentation files above. Everything is there.
-
-**Happy recommending! 🚀**
-
----
-
-*Questions about this file? Check `ML_COMPLETE_INDEX.md` for complete navigation.*
+**Happy coding!** 🚀
