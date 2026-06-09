@@ -7,7 +7,7 @@ from app.database import connect_to_mongo, close_mongo_connection
 from app.config import settings
 
 # Import routers (make sure each has `router = APIRouter()`)
-from app.routes import auth, movies, favorites, ratings, recommendations, recommendation_explanations, analytics, preferences, advanced_filter, wishlist, watch_history, reviews
+from app.routes import auth, movies, favorites, ratings, recommendations, recommendation_explanations, analytics, preferences, advanced_filter, wishlist, watch_history, reviews, user_management
 
 # Import ML pipeline
 from app.ml.pipeline import initialize_ml_pipeline
@@ -84,6 +84,7 @@ app.include_router(advanced_filter.router)
 app.include_router(wishlist.router)
 app.include_router(watch_history.router)
 app.include_router(reviews.router)
+app.include_router(user_management.router)
 
 # -------------------------
 # Basic endpoints

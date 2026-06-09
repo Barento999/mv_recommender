@@ -103,19 +103,6 @@ async def update_wishlist_item_route(
         },
     }
 
-@router.get("/priority/{priority}")
-async def get_wishlist_by_priority_route(
-    priority: str = Path(..., pattern="^(low|normal|high)$"),
-    current_user: User = Depends(get_current_user),
-):
-    """Get wishlist items filtered by priority."""
-    items = await get_wishlist_by_priority(str(current_user._id), priority)
-    return {
-        "wishlist": items,
-        "priority": priority,
-        "count": len(items),
-    }
-
 @router.get("/stats/overview")
 async def get_wishlist_stats_route(
     current_user: User = Depends(get_current_user),
@@ -136,4 +123,17 @@ async def get_wishlist_count_route(
     return {
         "count": count,
         "message": "Total wishlist items",
+    }
+
+@router.get("/priority/{priority}")
+async def get_wishlist_by_priority_route(
+    priority: str = Path(..., pattern="^(low|normal|high)$"),
+    current_user: User = Depends(get_current_user),
+):
+    """Get wishlist items filtered by priority."""
+    items = await get_wishlist_by_priority(str(current_user._id), priority)
+    return {
+        "wishlist": items,
+        "priority": priority,
+        "count": len(items),
     }

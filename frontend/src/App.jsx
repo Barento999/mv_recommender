@@ -18,6 +18,7 @@ import RecommendationsPage from "./pages/RecommendationsPage";
 import ProfilePage from "./pages/ProfilePage";
 import UserDashboardPage from "./pages/UserDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import UserManagementPage from "./pages/UserManagementPage";
 import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
 import UserPreferencesPage from "./pages/UserPreferencesPage";
 import AdvancedFilterPage from "./pages/AdvancedFilterPage";
