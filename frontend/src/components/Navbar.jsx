@@ -69,6 +69,14 @@ function Navbar() {
                 >
                   Preferences
                 </Link>
+                {user?.role === "admin" && (
+                  <Link
+                    to="/admin/users"
+                    className="hover:text-primary transition text-yellow-400 font-bold"
+                  >
+                    👥 Manage Users
+                  </Link>
+                )}
               </>
             )}
           </div>
@@ -183,6 +191,15 @@ function Navbar() {
                 >
                   Preferences
                 </Link>
+                {user?.role === "admin" && (
+                  <Link
+                    to="/admin/users"
+                    className="block hover:text-primary transition text-yellow-400 font-bold"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    👥 Manage Users
+                  </Link>
+                )}
                 <Link
                   to="/profile"
                   className="block hover:text-primary transition"

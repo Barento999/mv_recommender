@@ -112,6 +112,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute>
+                  <UserManagementPage />
+                </ProtectedRoute>
+              }
+            />
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
