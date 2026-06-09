@@ -128,9 +128,11 @@ async def get_preference_analysis(
     """Get detailed analysis of user's preferences based on their activity."""
     try:
         user_obj_id = ObjectId(str(current_user._id)) if isinstance(current_user._id, str) else current_user._id
+        logger.info(f"Getting preference analysis for user {user_obj_id}")
         
         # Get user's ratings
         user_ratings = await db.ratings.find({"user_id": user_obj_id}).to_list(None)
+        logger.info(f"Found {len(user_ratings)} ratings for user")
         
         if not user_ratings:
             return {
@@ -152,10 +154,13 @@ async def get_preference_analysis(
                         movie_ids.append(ObjectId(movie_id))
                     else:
                         movie_ids.append(movie_id)
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Could not convert movie_id {movie_id}: {e}")
                     movie_ids.append(movie_id)
             else:
                 movie_ids.append(movie_id)
+        
+        logger.info(f"Looking up {len(movie_ids)} movies")
         
         if not movie_ids:
             return {
@@ -168,6 +173,7 @@ async def get_preference_analysis(
             }
         
         movies = await db.movies.find({"_id": {"$in": movie_ids}}).to_list(None)
+        logger.info(f"Found {len(movies)} movies in database")
         movies_map = {str(m["_id"]): m for m in movies}
         
         # Analyze preferences
@@ -176,6 +182,7 @@ async def get_preference_analysis(
         rating_distribution = {}
         
         total_rating = 0
+        processed_count = 0
         
         for rating in user_ratings:
             try:
@@ -191,6 +198,7 @@ async def get_preference_analysis(
                 # Get movie details
                 if movie_id in movies_map:
                     movie = movies_map[movie_id]
+                    processed_count += 1
                     
                     # Genre preferences
                     for genre in movie.get("genre", []):
@@ -209,6 +217,8 @@ async def get_preference_analysis(
                 logger.warning(f"Error processing rating: {str(e)}")
                 continue
         
+        logger.info(f"Processed {processed_count} ratings with genre data")
+        
         # Get top genres
         top_genres = sorted(
             genre_preferences.items(),
@@ -217,6 +227,8 @@ async def get_preference_analysis(
         )[:5]
         
         avg_rating = total_rating / len(user_ratings) if user_ratings else 0
+        
+        logger.info(f"Analysis complete: avg_rating={avg_rating}, genres={len(genre_preferences)}")
         
         return {
             "genre_preferences": {
@@ -237,5 +249,5 @@ async def get_preference_analysis(
         }
         
     except Exception as e:
-        logger.error(f"Error analyzing preferences: {str(e)}")
+        logger.error(f"Error analyzing preferences: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to analyze preferences: {str(e)}")
