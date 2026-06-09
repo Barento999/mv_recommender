@@ -54,6 +54,12 @@ function Navbar() {
                 >
                   Analytics
                 </Link>
+                <Link
+                  to="/preferences"
+                  className="hover:text-primary transition"
+                >
+                  Preferences
+                </Link>
               </>
             )}
           </div>
@@ -139,6 +145,13 @@ function Navbar() {
                   onClick={() => setIsOpen(false)}
                 >
                   Analytics
+                </Link>
+                <Link
+                  to="/preferences"
+                  className="block hover:text-primary transition"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Preferences
                 </Link>
                 <Link
                   to="/profile"
