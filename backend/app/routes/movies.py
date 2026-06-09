@@ -48,8 +48,8 @@ async def list_movies(
     genre: Optional[str] = None,
     year: Optional[int] = None,
     min_rating: Optional[float] = Query(None, ge=0, le=10),
-    sort_by: Optional[str] = Query("rating", regex="^(rating|year|title)$"),
-    sort_order: Optional[str] = Query("desc", regex="^(asc|desc)$"),
+    sort_by: Optional[str] = Query("rating", pattern="^(rating|year|title)$"),
+    sort_order: Optional[str] = Query("desc", pattern="^(asc|desc)$"),
 ):
     if min_rating:
         movies, total = await filter_movies_by_rating(min_rating, skip, limit)
@@ -83,8 +83,8 @@ async def search(
     q: str = Query(..., min_length=1),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
-    sort_by: Optional[str] = Query("rating", regex="^(rating|year|title)$"),
-    sort_order: Optional[str] = Query("desc", regex="^(asc|desc)$"),
+    sort_by: Optional[str] = Query("rating", pattern="^(rating|year|title)$"),
+    sort_order: Optional[str] = Query("desc", pattern="^(asc|desc)$"),
 ):
     movies, total = await search_movies(q, skip, limit, sort_by, sort_order)
     return {

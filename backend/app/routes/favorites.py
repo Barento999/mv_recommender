@@ -44,8 +44,8 @@ async def remove_favorite_movie(
 async def get_favorites(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
-    sort_by: str = Query("created_at", regex="^(rating|year|title|created_at)$"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    sort_by: str = Query("created_at", pattern="^(rating|year|title|created_at)$"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_user),
 ):
     favorites, total = await get_user_favorites(str(current_user._id), skip, limit, sort_by, sort_order)

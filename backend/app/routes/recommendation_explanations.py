@@ -16,8 +16,8 @@ router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 @router.get("/explained")
 async def get_recommendations_with_explanations(
     limit: int = Query(10, ge=1, le=100),
-    sort_by: str = Query("rating", regex="^(rating|year|title)$"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    sort_by: str = Query("rating", pattern="^(rating|year|title)$"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database),
 ):

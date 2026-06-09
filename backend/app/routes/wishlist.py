@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, HTTPException, status, Query
+from fastapi import Depends, APIRouter, HTTPException, status, Query, Path
 from app.services.wishlist_service import (
     add_to_wishlist,
     remove_from_wishlist,
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/wishlist", tags=["wishlist"])
 @router.post("/add/{movie_id}")
 async def add_to_wishlist_route(
     movie_id: str,
-    priority: Optional[str] = Query("normal", regex="^(low|normal|high)$"),
+    priority: Optional[str] = Query("normal", pattern="^(low|normal|high)$"),
     notes: Optional[str] = Query("", max_length=500),
     current_user: User = Depends(get_current_user),
 ):
@@ -55,8 +55,8 @@ async def remove_from_wishlist_route(
 async def get_wishlist(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
-    sort_by: str = Query("created_at", regex="^(priority|rating|year|title|created_at)$"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    sort_by: str = Query("created_at", pattern="^(priority|rating|year|title|created_at)$"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_user),
 ):
     """Get user's wishlist with optional sorting."""
@@ -82,7 +82,7 @@ async def check_wishlist(
 @router.put("/update/{movie_id}")
 async def update_wishlist_item_route(
     movie_id: str,
-    priority: Optional[str] = Query(None, regex="^(low|normal|high)$"),
+    priority: Optional[str] = Query(None, pattern="^(low|normal|high)$"),
     notes: Optional[str] = Query(None, max_length=500),
     current_user: User = Depends(get_current_user),
 ):
@@ -105,7 +105,7 @@ async def update_wishlist_item_route(
 
 @router.get("/priority/{priority}")
 async def get_wishlist_by_priority_route(
-    priority: str = Query(..., regex="^(low|normal|high)$"),
+    priority: str = Path(..., pattern="^(low|normal|high)$"),
     current_user: User = Depends(get_current_user),
 ):
     """Get wishlist items filtered by priority."""
