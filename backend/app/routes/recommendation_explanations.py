@@ -49,84 +49,61 @@ async def get_recommendations_with_explanations(
         # Get stats for context
         total_favorites = len(favorite_movie_ids)
         
-        # Get ML recommendations
-        ml_recommendations = await get_recommendation(user_id, limit=limit, model_type="cf")
-        logger.info(f"ML recommendations: {len(ml_recommendations) if ml_recommendations else 0}")
+        # Get ML recommendations using the same service as the basic endpoint
+        # This ensures consistency and proper fallback handling
+        from app.services.recommendation_service import get_recommendations
+        recommendations_movies = await get_recommendations(user_id, limit=limit)
         
-        # If no ML recommendations, use fallback
-        if not ml_recommendations:
-            logger.info(f"Using fallback recommendations for {user_id}")
-            from app.services.recommendation_service import get_recommendations_fallback
-            fallback_movies = await get_recommendations_fallback(user_id, limit)
-            
-            if not fallback_movies:
-                return {
-                    "recommendations": [],
-                    "explanations": [],
-                    "count": 0,
-                    "message": "No recommendations available. Start rating movies to get recommendations!"
-                }
-            
-            # Return fallback recommendations without detailed explanations
+        logger.info(f"Got {len(recommendations_movies) if recommendations_movies else 0} recommendations")
+        
+        if not recommendations_movies:
             return {
-                "recommendations": [
-                    {
-                        "_id": str(m._id),
-                        "title": m.title,
-                        "genre": m.genre,
-                        "year": m.year,
-                        "rating": m.rating,
-                        "description": m.description,
-                        "poster_url": m.poster_url,
-                        "trailer_url": m.trailer_url,
-                        "created_at": m.created_at,
-                        "explanation": {
-                            "type": "Top Rated",
-                            "reasons": ["Highly rated movie that matches your interests"],
-                            "confidence": 60,
-                            "rank": idx + 1
-                        }
-                    }
-                    for idx, m in enumerate(fallback_movies)
-                ],
-                "count": len(fallback_movies),
-                "total_favorites": total_favorites,
-                "message": "Recommendations based on top-rated movies"
+                "recommendations": [],
+                "explanations": [],
+                "count": 0,
+                "message": "No recommendations available. Start rating movies to get recommendations!"
             }
         
+        # Convert to the format needed for explanations
+        ml_recommendations = [(str(m._id), 0.75) for m in recommendations_movies]  # Dummy score for non-ML results
+        
         # Build recommendations with explanations
-        movie_ids = [
-            ObjectId(movie_id) if isinstance(movie_id, str) and len(movie_id) == 24 else movie_id 
-            for movie_id, _ in ml_recommendations
-        ]
-        movies_data = await db.movies.find({"_id": {"$in": movie_ids}}).to_list(None)
+        movies_map = {str(m._id): m for m in recommendations_movies}
         
         recommendations_with_explanations = []
-        movies_map = {str(m["_id"]): m for m in movies_data}
-        
-        for idx, (movie_id, score) in enumerate(ml_recommendations):
-            if movie_id in movies_map:
-                movie = movies_map[movie_id]
-                explanation = _generate_explanation(movie, user_favorite_genres, score, idx + 1)
-                
-                recommendations_with_explanations.append({
-                    "_id": str(movie["_id"]),
-                    "title": movie.get("title", "Unknown"),
-                    "genre": movie.get("genre", []),
-                    "year": movie.get("year", 0),
-                    "rating": movie.get("rating", 0),
-                    "description": movie.get("description", ""),
-                    "poster_url": movie.get("poster_url", ""),
-                    "trailer_url": movie.get("trailer_url", ""),
-                    "created_at": movie.get("created_at", ""),
-                    "explanation": explanation
-                })
+        for idx, movie in enumerate(recommendations_movies):
+            movie_dict = movie.to_dict() if hasattr(movie, 'to_dict') else {
+                "_id": movie._id,
+                "title": movie.title,
+                "genre": movie.genre,
+                "year": movie.year,
+                "rating": movie.rating,
+                "description": movie.description,
+                "poster_url": movie.poster_url,
+                "trailer_url": movie.trailer_url,
+                "created_at": movie.created_at,
+            }
+            
+            explanation = _generate_explanation(movie_dict, user_favorite_genres, 0.75, idx + 1)
+            
+            recommendations_with_explanations.append({
+                "_id": str(movie._id),
+                "title": movie.title,
+                "genre": movie.genre,
+                "year": movie.year,
+                "rating": movie.rating,
+                "description": movie.description,
+                "poster_url": movie.poster_url,
+                "trailer_url": movie.trailer_url,
+                "created_at": movie.created_at,
+                "explanation": explanation
+            })
         
         return {
             "recommendations": recommendations_with_explanations,
             "count": len(recommendations_with_explanations),
             "total_favorites": len(favorite_movies),
-            "message": f"Personalized recommendations based on your {len(favorite_movies)} favorite movies"
+            "message": f"Personalized recommendations based on your {len(favorite_movies)} favorite movies" if favorite_movies else "Recommendations based on your ratings"
         }
         
     except Exception as e:
