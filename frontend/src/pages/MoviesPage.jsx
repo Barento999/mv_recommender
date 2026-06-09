@@ -21,6 +21,8 @@ function MoviesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [sortBy, setSortBy] = useState("rating");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -34,13 +36,15 @@ function MoviesPage() {
 
       let data;
       if (searchQuery) {
-        data = await movieService.searchMovies(searchQuery, skip, itemsPerPage);
+        data = await movieService.searchMovies(searchQuery, skip, itemsPerPage, sortBy, sortOrder);
       } else {
         data = await movieService.getAllMovies(
           skip,
           itemsPerPage,
           selectedGenre || null,
           selectedYear ? parseInt(selectedYear) : null,
+          sortBy,
+          sortOrder,
         );
       }
 
@@ -55,11 +59,11 @@ function MoviesPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedGenre, selectedYear]);
+  }, [searchQuery, selectedGenre, selectedYear, sortBy, sortOrder]);
 
   useEffect(() => {
     loadMovies();
-  }, [currentPage, searchQuery, selectedGenre, selectedYear]);
+  }, [currentPage, searchQuery, selectedGenre, selectedYear, sortBy, sortOrder]);
 
   const totalPages = Math.ceil(total / itemsPerPage);
 
@@ -83,8 +87,8 @@ function MoviesPage() {
             />
           </div>
 
-          {/* Filters */}
-          <div className="grid md:grid-cols-2 gap-4">
+          {/* Filters and Sort */}
+          <div className="grid md:grid-cols-4 gap-4">
             {/* Genre Filter */}
             <select
               value={selectedGenre}
@@ -114,6 +118,27 @@ function MoviesPage() {
                   {year}
                 </option>
               ))}
+            </select>
+
+            {/* Sort By */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-3 rounded-lg bg-darkGray border border-primary/20 focus:border-primary focus:outline-none transition"
+            >
+              <option value="rating">Sort by Rating</option>
+              <option value="year">Sort by Year</option>
+              <option value="title">Sort by Title</option>
+            </select>
+
+            {/* Sort Order */}
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="px-4 py-3 rounded-lg bg-darkGray border border-primary/20 focus:border-primary focus:outline-none transition"
+            >
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
             </select>
           </div>
         </div>

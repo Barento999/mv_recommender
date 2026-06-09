@@ -24,9 +24,9 @@ export const favoriteService = {
     return response.data;
   },
 
-  getFavorites: async (skip = 0, limit = 10, token) => {
+  getFavorites: async (skip = 0, limit = 10, token, sortBy = "created_at", sortOrder = "desc") => {
     const response = await api.get("/favorites", {
-      params: { skip, limit },
+      params: { skip, limit, sort_by: sortBy, sort_order: sortOrder },
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;

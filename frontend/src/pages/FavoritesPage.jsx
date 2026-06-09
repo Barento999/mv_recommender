@@ -11,6 +11,8 @@ function FavoritesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   const itemsPerPage = 12;
 
@@ -22,6 +24,8 @@ function FavoritesPage() {
         skip,
         itemsPerPage,
         token,
+        sortBy,
+        sortOrder,
       );
       setFavorites(data.favorites || []);
       setTotal(data.total);
@@ -33,8 +37,12 @@ function FavoritesPage() {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy, sortOrder]);
+
+  useEffect(() => {
     loadFavorites();
-  }, [currentPage]);
+  }, [currentPage, sortBy, sortOrder]);
 
   const totalPages = Math.ceil(total / itemsPerPage);
 
@@ -45,6 +53,31 @@ function FavoritesPage() {
         <p className="text-gray-400 mb-8">
           {total} favorite {total === 1 ? "movie" : "movies"}
         </p>
+
+        {/* Sort Options */}
+        {total > 0 && (
+          <div className="grid md:grid-cols-2 gap-4 mb-8">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-3 rounded-lg bg-darkGray border border-primary/20 focus:border-primary focus:outline-none transition"
+            >
+              <option value="created_at">Sort by Date Added</option>
+              <option value="rating">Sort by Rating</option>
+              <option value="year">Sort by Year</option>
+              <option value="title">Sort by Title</option>
+            </select>
+
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="px-4 py-3 rounded-lg bg-darkGray border border-primary/20 focus:border-primary focus:outline-none transition"
+            >
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
+            </select>
+          </div>
+        )}
 
         {loading ? (
           <LoadingSkeleton count={12} />

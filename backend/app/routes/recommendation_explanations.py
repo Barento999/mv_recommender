@@ -16,6 +16,8 @@ router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 @router.get("/explained")
 async def get_recommendations_with_explanations(
     limit: int = Query(10, ge=1, le=100),
+    sort_by: str = Query("rating", regex="^(rating|year|title)$"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$"),
     current_user: User = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database),
 ):
@@ -70,8 +72,23 @@ async def get_recommendations_with_explanations(
         # Build recommendations with explanations
         movies_map = {str(m._id): m for m in recommendations_movies}
         
+        # Apply sorting to recommendations
+        sort_direction = -1 if sort_order == "desc" else 1
+        sort_key_map = {
+            "rating": lambda m: m.rating,
+            "year": lambda m: m.year,
+            "title": lambda m: m.title
+        }
+        sort_key = sort_key_map.get(sort_by, lambda m: m.rating)
+        
+        recommendations_movies_sorted = sorted(
+            recommendations_movies, 
+            key=sort_key, 
+            reverse=(sort_order == "desc")
+        )
+        
         recommendations_with_explanations = []
-        for idx, movie in enumerate(recommendations_movies):
+        for idx, movie in enumerate(recommendations_movies_sorted):
             movie_dict = movie.to_dict() if hasattr(movie, 'to_dict') else {
                 "_id": movie._id,
                 "title": movie.title,

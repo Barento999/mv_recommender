@@ -14,9 +14,9 @@ export const recommendationService = {
     return response.data;
   },
 
-  getRecommendationsWithExplanations: async (limit = 10, token) => {
+  getRecommendationsWithExplanations: async (limit = 10, token, sortBy = "rating", sortOrder = "desc") => {
     const response = await api.get("/recommendations/explained", {
-      params: { limit },
+      params: { limit, sort_by: sortBy, sort_order: sortOrder },
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;

@@ -48,11 +48,13 @@ async def list_movies(
     genre: Optional[str] = None,
     year: Optional[int] = None,
     min_rating: Optional[float] = Query(None, ge=0, le=10),
+    sort_by: Optional[str] = Query("rating", regex="^(rating|year|title)$"),
+    sort_order: Optional[str] = Query("desc", regex="^(asc|desc)$"),
 ):
     if min_rating:
         movies, total = await filter_movies_by_rating(min_rating, skip, limit)
     else:
-        movies, total = await get_all_movies(skip, limit, genre, year)
+        movies, total = await get_all_movies(skip, limit, genre, year, sort_by, sort_order)
 
     return {
         "movies": [
@@ -72,6 +74,8 @@ async def list_movies(
         "total": total,
         "skip": skip,
         "limit": limit,
+        "sort_by": sort_by,
+        "sort_order": sort_order,
     }
 
 @router.get("/search", response_model=dict)
@@ -79,8 +83,10 @@ async def search(
     q: str = Query(..., min_length=1),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
+    sort_by: Optional[str] = Query("rating", regex="^(rating|year|title)$"),
+    sort_order: Optional[str] = Query("desc", regex="^(asc|desc)$"),
 ):
-    movies, total = await search_movies(q, skip, limit)
+    movies, total = await search_movies(q, skip, limit, sort_by, sort_order)
     return {
         "movies": [
             {
@@ -98,6 +104,8 @@ async def search(
         ],
         "total": total,
         "query": q,
+        "sort_by": sort_by,
+        "sort_order": sort_order,
     }
 
 @router.get("/{movie_id}", response_model=MovieResponse)

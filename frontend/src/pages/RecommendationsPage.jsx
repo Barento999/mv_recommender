@@ -9,6 +9,8 @@ function RecommendationsPage() {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [sortBy, setSortBy] = useState("rating");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [stats, setStats] = useState({
     total_favorites: 0,
   });
@@ -16,7 +18,7 @@ function RecommendationsPage() {
   const loadRecommendations = async () => {
     setLoading(true);
     try {
-      const data = await recommendationService.getRecommendationsWithExplanations(20, token);
+      const data = await recommendationService.getRecommendationsWithExplanations(20, token, sortBy, sortOrder);
       setRecommendations(data.recommendations || []);
       setMessage(data.message);
       setStats({
@@ -32,7 +34,7 @@ function RecommendationsPage() {
 
   useEffect(() => {
     loadRecommendations();
-  }, []);
+  }, [sortBy, sortOrder]);
 
   return (
     <div className="min-h-screen bg-dark">
@@ -48,6 +50,30 @@ function RecommendationsPage() {
             </div>
           )}
         </div>
+
+        {/* Sort Options */}
+        {!loading && recommendations.length > 0 && (
+          <div className="grid md:grid-cols-2 gap-4 mb-8">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-3 rounded-lg bg-darkGray border border-primary/20 focus:border-primary focus:outline-none transition"
+            >
+              <option value="rating">Sort by Rating</option>
+              <option value="year">Sort by Year</option>
+              <option value="title">Sort by Title</option>
+            </select>
+
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="px-4 py-3 rounded-lg bg-darkGray border border-primary/20 focus:border-primary focus:outline-none transition"
+            >
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
+            </select>
+          </div>
+        )}
 
         {loading ? (
           <LoadingSkeleton count={12} />

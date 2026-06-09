@@ -38,7 +38,12 @@ async def get_movie_by_id(movie_id: str) -> Optional[Movie]:
     return None
 
 async def get_all_movies(
-    skip: int = 0, limit: int = 10, genre: Optional[str] = None, year: Optional[int] = None
+    skip: int = 0, 
+    limit: int = 10, 
+    genre: Optional[str] = None, 
+    year: Optional[int] = None,
+    sort_by: Optional[str] = "rating",
+    sort_order: Optional[str] = "desc",
 ) -> tuple[List[Movie], int]:
     db = get_database()
     query = {}
@@ -49,13 +54,30 @@ async def get_all_movies(
     if year:
         query["year"] = year
 
-    movies_data = await db.movies.find(query).skip(skip).limit(limit).to_list(None)
+    # Determine sort direction
+    sort_direction = -1 if sort_order == "desc" else 1
+    
+    # Map sort_by to database field
+    sort_field_map = {
+        "rating": "rating",
+        "year": "year",
+        "title": "title"
+    }
+    sort_field = sort_field_map.get(sort_by, "rating")
+
+    movies_data = await db.movies.find(query).sort(sort_field, sort_direction).skip(skip).limit(limit).to_list(None)
     total = await db.movies.count_documents(query)
 
     movies = [Movie.from_dict(m) for m in movies_data]
     return movies, total
 
-async def search_movies(query: str, skip: int = 0, limit: int = 10) -> tuple[List[Movie], int]:
+async def search_movies(
+    query: str, 
+    skip: int = 0, 
+    limit: int = 10,
+    sort_by: Optional[str] = "rating",
+    sort_order: Optional[str] = "desc",
+) -> tuple[List[Movie], int]:
     db = get_database()
     search_query = {
         "$or": [
@@ -63,7 +85,19 @@ async def search_movies(query: str, skip: int = 0, limit: int = 10) -> tuple[Lis
             {"description": {"$regex": query, "$options": "i"}},
         ]
     }
-    movies_data = await db.movies.find(search_query).skip(skip).limit(limit).to_list(None)
+    
+    # Determine sort direction
+    sort_direction = -1 if sort_order == "desc" else 1
+    
+    # Map sort_by to database field
+    sort_field_map = {
+        "rating": "rating",
+        "year": "year",
+        "title": "title"
+    }
+    sort_field = sort_field_map.get(sort_by, "rating")
+    
+    movies_data = await db.movies.find(search_query).sort(sort_field, sort_direction).skip(skip).limit(limit).to_list(None)
     total = await db.movies.count_documents(search_query)
 
     movies = [Movie.from_dict(m) for m in movies_data]

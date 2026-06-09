@@ -6,17 +6,17 @@ const api = axios.create({
 });
 
 export const movieService = {
-  getAllMovies: async (skip = 0, limit = 10, genre = null, year = null) => {
-    const params = { skip, limit };
+  getAllMovies: async (skip = 0, limit = 10, genre = null, year = null, sortBy = "rating", sortOrder = "desc") => {
+    const params = { skip, limit, sort_by: sortBy, sort_order: sortOrder };
     if (genre) params.genre = genre;
     if (year) params.year = year;
     const response = await api.get("/movies", { params });
     return response.data;
   },
 
-  searchMovies: async (query, skip = 0, limit = 10) => {
+  searchMovies: async (query, skip = 0, limit = 10, sortBy = "rating", sortOrder = "desc") => {
     const response = await api.get("/movies/search", {
-      params: { q: query, skip, limit },
+      params: { q: query, skip, limit, sort_by: sortBy, sort_order: sortOrder },
     });
     return response.data;
   },
@@ -47,9 +47,9 @@ export const movieService = {
     return response.data;
   },
 
-  getMoviesByRating: async (minRating, skip = 0, limit = 10) => {
+  getMoviesByRating: async (minRating, skip = 0, limit = 10, sortBy = "rating", sortOrder = "desc") => {
     const response = await api.get("/movies", {
-      params: { min_rating: minRating, skip, limit },
+      params: { min_rating: minRating, skip, limit, sort_by: sortBy, sort_order: sortOrder },
     });
     return response.data;
   },
