@@ -9,6 +9,7 @@ from pathlib import Path
 from app.database import get_database
 from bson import ObjectId
 from datetime import datetime
+from app.middleware.rbac import get_permission_list
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ async def seed_database():
     - 2,000 movies from data/movies.csv
     - 150 users from data/users.csv
     - 14,725 ratings from data/ratings.csv
+    - 1 admin user for testing
     """
     
     db = get_database()
@@ -31,6 +33,8 @@ async def seed_database():
         
         if movie_count > 0:
             logger.info(f"✅ Database already seeded with {movie_count} movies")
+            # Still check for admin user
+            await seed_admin_user(db)
             return True
         
         logger.info("\n" + "="*70)
@@ -75,6 +79,8 @@ async def seed_database():
                 "user_id": row.get("user_id", ""),
                 "name": row.get("name", ""),
                 "email": row.get("email", ""),
+                "role": "user",
+                "permissions": get_permission_list("user"),
                 "created_at": datetime.utcnow(),
             }
             users_data.append(user)
@@ -102,6 +108,9 @@ async def seed_database():
             await db.ratings.insert_many(ratings_data)
             logger.info(f"✅ Seeded {len(ratings_data)} ratings")
         
+        # Seed admin user
+        await seed_admin_user(db)
+        
         logger.info("\n" + "="*70)
         logger.info("✅ DATABASE SEEDING COMPLETE")
         logger.info("="*70)
@@ -118,3 +127,36 @@ async def seed_database():
         import traceback
         traceback.print_exc()
         return False
+
+
+async def seed_admin_user(db):
+    """Create a default admin user for testing if it doesn't exist."""
+    try:
+        # Check if admin already exists
+        admin_exists = await db.users.find_one({"email": "admin@movierego.com"})
+        
+        if admin_exists:
+            logger.info("✅ Admin user already exists")
+            return
+        
+        # Create admin user (password will be handled by auth routes)
+        admin_user = {
+            "_id": ObjectId(),
+            "name": "Admin User",
+            "email": "admin@movierego.com",
+            "password_hash": "",  # Will be set during registration/manual setup
+            "role": "admin",
+            "permissions": get_permission_list("admin"),
+            "created_at": datetime.utcnow(),
+        }
+        
+        result = await db.users.insert_one(admin_user)
+        logger.info(f"✅ Created admin user (ID: {result.inserted_id})")
+        logger.info("\n📌 ADMIN CREDENTIALS FOR TESTING:")
+        logger.info("   Email: admin@movierego.com")
+        logger.info("   Password: (Set via registration or manual setup)")
+        logger.info("   Note: Use the registration page or update password manually\n")
+        
+    except Exception as e:
+        logger.error(f"Error seeding admin user: {str(e)}")
+
