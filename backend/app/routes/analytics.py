@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.database import get_database
+from app.middleware.auth import get_current_user
+from app.middleware.rbac import require_role_or_higher
+from app.models.user import User
 from datetime import datetime, timedelta
 import logging
 
@@ -10,7 +13,10 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 
 @router.get("/overview")
-async def get_analytics_overview(db: AsyncIOMotorDatabase = Depends(get_database)):
+async def get_analytics_overview(
+    db: AsyncIOMotorDatabase = Depends(get_database),
+    current_user: User = Depends(require_role_or_higher("moderator")),
+):
     """Get overall system analytics."""
     try:
         # Get collections
@@ -68,7 +74,10 @@ async def get_analytics_overview(db: AsyncIOMotorDatabase = Depends(get_database
 
 
 @router.get("/ratings-distribution")
-async def get_ratings_distribution(db: AsyncIOMotorDatabase = Depends(get_database)):
+async def get_ratings_distribution(
+    db: AsyncIOMotorDatabase = Depends(get_database),
+    current_user: User = Depends(require_role_or_higher("moderator")),
+):
     """Get distribution of ratings (1-10)."""
     try:
         ratings_collection = db["ratings"]
@@ -105,7 +114,10 @@ async def get_ratings_distribution(db: AsyncIOMotorDatabase = Depends(get_databa
 
 
 @router.get("/genre-analytics")
-async def get_genre_analytics(db: AsyncIOMotorDatabase = Depends(get_database)):
+async def get_genre_analytics(
+    db: AsyncIOMotorDatabase = Depends(get_database),
+    current_user: User = Depends(require_role_or_higher("moderator")),
+):
     """Get analytics by genre."""
     try:
         movies_collection = db["movies"]
@@ -151,7 +163,10 @@ async def get_genre_analytics(db: AsyncIOMotorDatabase = Depends(get_database)):
 
 
 @router.get("/user-engagement")
-async def get_user_engagement(db: AsyncIOMotorDatabase = Depends(get_database)):
+async def get_user_engagement(
+    db: AsyncIOMotorDatabase = Depends(get_database),
+    current_user: User = Depends(require_role_or_higher("moderator")),
+):
     """Get user engagement metrics (optimized)."""
     try:
         users_collection = db["users"]
@@ -220,7 +235,10 @@ async def get_user_engagement(db: AsyncIOMotorDatabase = Depends(get_database)):
 
 
 @router.get("/top-movies-analytics")
-async def get_top_movies_analytics(db: AsyncIOMotorDatabase = Depends(get_database)):
+async def get_top_movies_analytics(
+    db: AsyncIOMotorDatabase = Depends(get_database),
+    current_user: User = Depends(require_role_or_higher("moderator")),
+):
     """Get top movies by various metrics."""
     try:
         movies_collection = db["movies"]
@@ -297,7 +315,10 @@ async def get_top_movies_analytics(db: AsyncIOMotorDatabase = Depends(get_databa
 
 
 @router.get("/timeline-stats")
-async def get_timeline_stats(db: AsyncIOMotorDatabase = Depends(get_database)):
+async def get_timeline_stats(
+    db: AsyncIOMotorDatabase = Depends(get_database),
+    current_user: User = Depends(require_role_or_higher("moderator")),
+):
     """Get ratings timeline for last 30 days."""
     try:
         ratings_collection = db["ratings"]

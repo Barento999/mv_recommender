@@ -10,8 +10,10 @@ import {
   LineChart,
 } from "lucide-react";
 import analyticsService from "../services/analyticsService";
+import useAuth from "../hooks/useAuth";
 
 function AnalyticsDashboardPage() {
+  const { user } = useAuth();
   const [overview, setOverview] = useState(null);
   const [ratingsDistribution, setRatingsDistribution] = useState([]);
   const [genreAnalytics, setGenreAnalytics] = useState([]);
@@ -22,6 +24,11 @@ function AnalyticsDashboardPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Only moderator and admin can view analytics
+    if (!user || (user.role !== "moderator" && user.role !== "admin")) {
+      window.location.href = "/";
+      return;
+    }
     loadAnalytics();
   }, []);
 
