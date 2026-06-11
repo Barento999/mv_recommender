@@ -1,5 +1,10 @@
 from dotenv import load_dotenv
-load_dotenv()
+from pathlib import Path
+
+# Load .env file from backend directory
+env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
+
 import os
 from datetime import timedelta
 
